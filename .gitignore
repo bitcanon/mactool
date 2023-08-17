@@ -1,0 +1,50 @@
+# Compiled binary files
+*.exe
+*.o
+*.so
+*.test
+*.prof
+
+# Compiled object files, build cache
+*.a
+*.test
+
+# Ignore the Go module cache
+vendor/
+go.sum
+
+# Ignore editor and IDE files
+.idea/
+.vscode/
+*.swp
+*~
+
+# Ignore binary release artifacts
+release/
+
+# Ignore any generated documentation
+doc/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore user-specific Go files
+*.testoutput
+
+# Ignore logs and temporary files
+log/
+*.log
+*.log.*
+
+# Ignore test cache
+testcache/
+
+# Ignore any environment-specific configuration files
+.env
+
+# Ignore system-specific files
+_system_specific/
+
+# Ignore notes file
+notes.txt
