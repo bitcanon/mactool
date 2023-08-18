@@ -11,7 +11,7 @@
 
 # Ignore the Go module cache
 vendor/
-go.sum
+# go.sum
 
 # Ignore editor and IDE files
 .idea/
