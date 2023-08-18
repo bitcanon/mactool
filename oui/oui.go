@@ -23,7 +23,9 @@ package oui
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
+	"net/http"
 )
 
 type Oui struct {
@@ -82,4 +84,63 @@ func LoadDatabase(r io.Reader) (*OuiDb, error) {
 
 	// Return the OUI database
 	return db, nil
+}
+
+func DownloadDatabase(w io.Writer, url string) error {
+	// Download the CSV database
+	// url := "http://standards-oui.ieee.org/oui/oui.csv"
+
+	// Perform the HTTP GET request
+	response, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	// Check if the response status code indicates success
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download database file: %s", response.Status)
+	}
+
+	// Get the size of the file for progress calculation
+	fileSize := response.ContentLength
+
+	// Create a buffer for reading and copying data,
+	// processing the data in chunks of 1024 bytes
+	buf := make([]byte, 1024)
+
+	var totalDownloaded int64
+
+	// Read and write data in chunks, updating progress along the way
+	for {
+		n, err := response.Body.Read(buf)
+		if n > 0 {
+			// Write the data to the output file
+			_, err := w.Write(buf[:n])
+			if err != nil {
+				return err
+			}
+
+			totalDownloaded += int64(n)
+
+			// Calculate and display progress in percent
+			progressPercent := (float64(totalDownloaded) / float64(fileSize)) * 100
+			fmt.Printf("\rDownload Progress: %.2f%%", progressPercent)
+		}
+
+		if err != nil {
+			// Check if we reached the end of the file
+			if err == io.EOF {
+				break
+			}
+
+			// Return an error if we encountered an error other than EOF
+			return err
+		}
+	}
+
+	// Print a newline after the progress indicator
+	fmt.Println()
+
+	return nil
 }
