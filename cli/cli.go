@@ -23,8 +23,10 @@ package cli
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // processStdin reads all data from standard input
@@ -53,8 +55,11 @@ func ProcessInteractiveInput() (string, error) {
 	// The loop will exit when the user presses Ctrl+D (Unix)
 	// or Ctrl+Z (Windows).
 	for scanner.Scan() {
-		input = scanner.Text()
+		input += fmt.Sprintf("%s\n", scanner.Text())
 	}
+
+	// Remove the trailing newline character
+	input = strings.TrimRight(input, "\n")
 
 	// Check for errors that may have occurred while reading
 	if err := scanner.Err(); err != nil {
