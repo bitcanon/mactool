@@ -22,10 +22,11 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
+	"os"
 
-	"github.com/bitcanon/mactool/macutil"
 	"github.com/spf13/cobra"
+
+	"github.com/bitcanon/mactool/oui"
 )
 
 // lookupCmd represents the lookup command
@@ -59,18 +60,15 @@ func init() {
 
 func playGround() {
 
-	text := `
-	0 DC 10.10.10.13      AB:CD:EF:52:86:12  vlan10_test
-	1 DC 10.10.10.6       AB:CD:EF:8D:11:34  vlan10_test
-	2 D  10.10.10.53                         vlan10_test
-	`
-
-	macs, err := macutil.FindAllMacAddresses(text)
+	// outfile
+	outfile, err := os.Create("oui.csv")
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
-	for _, mac := range macs {
-		fmt.Println(mac)
+	// download csv file
+	url := "http://standards-oui.ieee.org/oui/oui.csv"
+	if err := oui.DownloadDatabase(outfile, url); err != nil {
+		panic(err)
 	}
 }
