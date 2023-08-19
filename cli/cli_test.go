@@ -19,9 +19,16 @@ func TestProcessStdin(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:     "ValidInput",
-			input:    "Example input from stdin",
-			expected: "Example input from stdin",
+			name:     "ValidSingleLineInput",
+			input:    `First line of input from interactive user input`,
+			expected: `First line of input from interactive user input`,
+		},
+		{
+			name: "ValidMultiLineInput",
+			input: `First line of input from interactive user input
+Second line of input from interactive user input`,
+			expected: `First line of input from interactive user input
+Second line of input from interactive user input`,
 		},
 		{
 			name:     "EmptyInput",
