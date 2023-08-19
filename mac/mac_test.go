@@ -1,9 +1,9 @@
-package macutil_test
+package mac_test
 
 import (
 	"testing"
 
-	"github.com/bitcanon/mactool/macutil"
+	"github.com/bitcanon/mactool/mac"
 )
 
 func TestFindAllMacAddresses(t *testing.T) {
@@ -48,7 +48,7 @@ func TestFindAllMacAddresses(t *testing.T) {
 	// Loop through the test cases
 	for _, tc := range testCases {
 		// Find all MAC addresses in the input string
-		macs, err := macutil.FindAllMacAddresses(tc.input)
+		macs, err := mac.FindAllMacAddresses(tc.input)
 		if err != nil {
 			t.Errorf("error returned from FindAllMacAddresses(%q): %v", tc.input, err)
 		}
