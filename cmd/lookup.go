@@ -31,20 +31,44 @@ import (
 
 	"github.com/bitcanon/mactool/cli"
 	"github.com/bitcanon/mactool/mac"
+	"github.com/bitcanon/mactool/oui"
 )
 
 func lookupAction(out io.Writer, s string) error {
 	// Extract MAC addresses from string
 	macs, err := mac.FindAllMacAddresses(s)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
+	// Open the OUI database file
+	file, err := os.Open("oui.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Load the OUI database into memory
+	db, err := oui.LoadDatabase(file)
+
 	// Print MAC addresses found in the input string
 	// to the output writer
-	for _, mac := range macs {
-		fmt.Fprintln(out, mac)
+	for _, macAddress := range macs {
+		// Lookup the vendor of the MAC address
+		assignment, err := mac.ExtractOuiFromMac(macAddress)
+		if err != nil {
+			return err
+		}
+
+		// Lookup the vendor in the OUI database
+		vendor := db.FindOuiByAssignment(assignment)
+		if vendor != nil {
+			// If the vendor was found, print the vendor name
+			fmt.Fprintf(out, "%s (%s)\n", macAddress, vendor.Organization)
+		} else {
+			// If the vendor was not found, print the MAC address
+			fmt.Fprintln(out, macAddress)
+		}
 	}
 
 	// No errors occurred
@@ -73,10 +97,11 @@ standard input (piped data) or interactive input.`
 
 // lookupCmd represents the lookup command
 var lookupCmd = &cobra.Command{
-	Use:     "lookup",
-	Short:   "Lookup vendors of MAC addresses from the input string",
-	Long:    lookupLong,
-	Example: lookupExample,
+	Use:          "lookup",
+	Short:        "Lookup vendors of MAC addresses from the input string",
+	Long:         lookupLong,
+	Example:      lookupExample,
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Input string to hold the processed input
 		var input string
