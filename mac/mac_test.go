@@ -61,3 +61,41 @@ func TestFindAllMacAddresses(t *testing.T) {
 		}
 	}
 }
+
+func TestExtractOuiFromMac(t *testing.T) {
+	// Setup test cases
+	testCases := []struct {
+		input    string
+		expected string
+		expError error
+	}{
+		{"00:00:5e:00:53:01", "00005E", nil},
+		{"00:00:5E:00:53:01", "00005E", nil},
+		{"02:00:5e:10:00:00:00:01", "02005E", nil},
+		{"00-00-5e-00-53-01", "00005E", nil},
+		{"02-00-5e-10-00-00-00-01", "02005E", nil},
+		{"0000.5e00.5301", "00005E", nil},
+		{"0200.5e10.0000.0001", "02005E", nil},
+		{"0000-5e00-5301", "00005E", nil},
+		{"0200-5e10-0000-0001", "02005E", nil},
+		{"", "", mac.ErrInvalidMacAddress},
+		{"AB:CD", "", mac.ErrInvalidMacAddress},
+		{"NO:TA:MA:CA:DD:RE", "", mac.ErrInvalidMacAddress},
+	}
+
+	// Loop through the test cases
+	for _, tc := range testCases {
+		// Extract the OUI from the MAC address
+		oui, err := mac.ExtractOuiFromMac(tc.input)
+
+		// Check for an expected error
+		if err != tc.expError {
+			t.Errorf("expected %v, got %v", tc.expError, err)
+		}
+
+		// Compare the results to the expected values
+		if oui != tc.expected {
+			t.Errorf("expected %q, got %q", tc.expected, oui)
+		}
+	}
+}

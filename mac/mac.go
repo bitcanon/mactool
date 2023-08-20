@@ -22,9 +22,15 @@ THE SOFTWARE.
 package mac
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 )
+
+// ErrInvalidMacAddress is returned when the input string
+// is not a valid MAC address.
+var ErrInvalidMacAddress = errors.New("invalid MAC address")
 
 // extractMacAddresses extracts MAC addresses from the input string.
 // The groupCount parameter is the number of groups of MAC
@@ -93,4 +99,27 @@ func FindAllMacAddresses(s string) ([]string, error) {
 
 	// Return the list of MAC addresses found in the input string
 	return addresses, nil
+}
+
+// ExtractOuiFromMac extracts the OUI assignment from a MAC address.
+func ExtractOuiFromMac(macAddress string) (string, error) {
+	// Make sure the string is uppercase since the
+	// assignment in the OUI database is uppercase
+	macAddress = strings.ToUpper(macAddress)
+
+	// Define a regular expression to remove all non-alphanumeric
+	// characters from the MAC address
+	reg := regexp.MustCompile("[^a-fA-F0-9]+")
+
+	// Remove all non-alphanumeric characters from the MAC address
+	macAddress = reg.ReplaceAllString(macAddress, "")
+
+	// Make sure the MAC address is at least 12 characters long
+	// and return the first 3 bytes (6 hexadecimal characters) as a string
+	if len(macAddress) >= 12 {
+		assignment := macAddress[0:6]
+		return assignment, nil
+	} else {
+		return "", ErrInvalidMacAddress
+	}
 }
