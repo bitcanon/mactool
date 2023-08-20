@@ -6,6 +6,7 @@ import (
 	"github.com/bitcanon/mactool/mac"
 )
 
+// TestExtractMacAddresses tests the ExtractMacAddresses function.
 func TestFindAllMacAddresses(t *testing.T) {
 	// Setup test cases
 	testCases := []struct {
@@ -62,6 +63,7 @@ func TestFindAllMacAddresses(t *testing.T) {
 	}
 }
 
+// TestExtractOuiFromMac tests the ExtractOuiFromMac function.
 func TestExtractOuiFromMac(t *testing.T) {
 	// Setup test cases
 	testCases := []struct {
