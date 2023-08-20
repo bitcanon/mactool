@@ -52,10 +52,10 @@ func extractAction(out io.Writer, s string) error {
 }
 
 // Example help text for the extract command
-const extractExample = `  mactool extract 00:00:5e:00:53:01
-  mactool extract 0000.5e00.5301 00:00:5e:00:53:01 0000-5e00-5301 00-00-5e-00-53-01
+const extractExample = `  mactool extract 0000.5e00.5301 00:00:5e:00:53:01 0000-5e00-5301 00-00-5e-00-53-01
   mactool extract First address 0000.5E00.5301, second address 00:00:5e:00:53:01, etc.
   cat macs.txt | mactool extract
+  ipconfig /all | mactool extract
 
 Interactive mode:
   mactool extract
