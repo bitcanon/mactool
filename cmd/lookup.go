@@ -22,25 +22,91 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/bitcanon/mactool/oui"
+	"github.com/bitcanon/mactool/cli"
+	"github.com/bitcanon/mactool/mac"
 )
+
+func lookupAction(out io.Writer, s string) error {
+	// Extract MAC addresses from string
+	macs, err := mac.FindAllMacAddresses(s)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	// Print MAC addresses found in the input string
+	// to the output writer
+	for _, mac := range macs {
+		fmt.Fprintln(out, mac)
+	}
+
+	// No errors occurred
+	return nil
+}
+
+// Example help text for the lookup command
+const lookupExample = `  mactool lookup 00:00:5e:00:53:01
+  mactool lookup 0000.5e00.5301 00:00:5e:00:53:01 0000-5e00-5301 00-00-5e-00-53-01
+  mactool lookup First address 0000.5E00.5301, second address 00:00:5e:00:53:01, etc.
+  cat macs.txt | mactool lookup
+  ip addr | mactool lookup
+
+Interactive mode:
+  mactool lookup
+
+While operating in interactive mode, enter or paste the input string and then press
+Enter to proceed. To exit, use Ctrl+D (Unix) or Ctrl+Z (Windows), followed by Enter.`
+
+// Long help text for the extract command
+const lookupLong = `Extract MAC addresses from the input string, perform
+vendor lookup, and display the result on the terminal.
+
+The command takes input in the form of command line arguments,
+standard input (piped data) or interactive input.`
 
 // lookupCmd represents the lookup command
 var lookupCmd = &cobra.Command{
-	Use:   "lookup",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:     "lookup",
+	Short:   "Lookup vendors of MAC addresses from the input string",
+	Long:    lookupLong,
+	Example: lookupExample,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Input string to hold the processed input
+		var input string
+		var err error
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		playGround()
+		// Check if data is being piped or redirected to stdin
+		if stat, _ := os.Stdin.Stat(); (stat.Mode() & os.ModeCharDevice) == 0 {
+			// Process data from pipe or redirection (stdin)
+			input, err = cli.ProcessStdin()
+			if err != nil {
+				return err
+			}
+		} else {
+			if len(args) == 0 {
+				// If there are no command line arguments,
+				// enter interactive mode and read user input
+				input, err = cli.ProcessInteractiveInput()
+				if err != nil {
+					return err
+				}
+			} else {
+				// If there are command line arguments, join them
+				// into a single string and use that as user input
+				input = strings.Join(args, " ")
+			}
+		}
+
+		// Extract MAC addresses from string and
+		// perform vendor lookup on each address
+		return lookupAction(os.Stdout, input)
 	},
 }
 
@@ -56,19 +122,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// lookupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func playGround() {
-
-	// outfile
-	outfile, err := os.Create("oui.csv")
-	if err != nil {
-		panic(err)
-	}
-
-	// download csv file
-	url := "http://standards-oui.ieee.org/oui/oui.csv"
-	if err := oui.DownloadDatabase(outfile, url); err != nil {
-		panic(err)
-	}
 }
