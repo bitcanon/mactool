@@ -44,10 +44,6 @@ A versatile tool for network, security, and data tasks.`,
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
-
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -66,11 +62,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	// Add flag for custom config file path
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mactool.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	// Set a custom version template
 	rootCmd.SetVersionTemplate(`{{ printf "%s %s" .Name .Version }}`)
@@ -92,7 +85,8 @@ func initConfig() {
 		viper.SetConfigName(".mactool")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	// Load any environment variable that match an existing config key
+	viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
