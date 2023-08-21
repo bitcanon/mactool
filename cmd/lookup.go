@@ -34,22 +34,20 @@ import (
 	"github.com/bitcanon/mactool/oui"
 )
 
-func lookupAction(out io.Writer, s string) error {
+// lookupAction extracts MAC addresses from the input string,
+// performs vendor lookup, and prints the result to the output writer.
+func lookupAction(out io.Writer, csv io.Reader, s string) error {
 	// Extract MAC addresses from string
 	macs, err := mac.FindAllMacAddresses(s)
 	if err != nil {
 		return err
 	}
 
-	// Open the OUI database file
-	file, err := os.Open("oui.csv")
+	// Load the OUI database into memory
+	db, err := oui.LoadDatabase(csv)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
-	// Load the OUI database into memory
-	db, err := oui.LoadDatabase(file)
 
 	// Print MAC addresses found in the input string
 	// to the output writer
@@ -62,6 +60,7 @@ func lookupAction(out io.Writer, s string) error {
 
 		// Lookup the vendor in the OUI database
 		vendor := db.FindOuiByAssignment(assignment)
+
 		if vendor != nil {
 			// If the vendor was found, print the vendor name
 			fmt.Fprintf(out, "%s (%s)\n", macAddress, vendor.Organization)
@@ -129,9 +128,16 @@ var lookupCmd = &cobra.Command{
 			}
 		}
 
+		// Open the OUI database file
+		file, err := os.Open("oui.csv")
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
 		// Extract MAC addresses from string and
 		// perform vendor lookup on each address
-		return lookupAction(os.Stdout, input)
+		return lookupAction(os.Stdout, file, input)
 	},
 }
 
