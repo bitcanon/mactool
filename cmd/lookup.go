@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/bitcanon/mactool/cli"
 	"github.com/bitcanon/mactool/mac"
@@ -129,7 +130,10 @@ var lookupCmd = &cobra.Command{
 		}
 
 		// Open the OUI database file
-		file, err := os.Open("oui.csv")
+		csv := viper.GetString("csv-file")
+
+		// Open the CSV file
+		file, err := os.Open(csv)
 		if err != nil {
 			return err
 		}
@@ -141,16 +145,19 @@ var lookupCmd = &cobra.Command{
 	},
 }
 
+// init registers the lookup command and flags
 func init() {
+	// Add the lookup command to the root command
 	rootCmd.AddCommand(lookupCmd)
 
-	// Here you will define your flags and configuration settings.
+	// Add the --csv-file flag to the lookup command
+	rootCmd.PersistentFlags().StringP("csv-file", "f", "oui.csv", "Path to CSV file")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// lookupCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// Check for environment variables prefixed with MACTOOL
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("MACTOOL")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// lookupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Bind the --csv-file flag to the viper variable
+	viper.BindPFlag("csv-file", rootCmd.PersistentFlags().Lookup("csv-file"))
 }
