@@ -151,7 +151,7 @@ func init() {
 	rootCmd.AddCommand(lookupCmd)
 
 	// Add the --csv-file flag to the lookup command
-	rootCmd.PersistentFlags().StringP("csv-file", "f", "oui.csv", "Path to CSV file")
+	lookupCmd.PersistentFlags().StringP("csv-file", "f", "oui.csv", "path to CSV file")
 
 	// Check for environment variables prefixed with MACTOOL
 	replacer := strings.NewReplacer("-", "_")
@@ -159,5 +159,5 @@ func init() {
 	viper.SetEnvPrefix("MACTOOL")
 
 	// Bind the --csv-file flag to the viper variable
-	viper.BindPFlag("csv-file", rootCmd.PersistentFlags().Lookup("csv-file"))
+	viper.BindPFlag("csv-file", lookupCmd.PersistentFlags().Lookup("csv-file"))
 }
