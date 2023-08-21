@@ -5,7 +5,9 @@ import (
 	"testing"
 )
 
+// TestLookupAction tests the lookupAction function
 func TestLookupAction(t *testing.T) {
+	// Set up test cases
 	testCases := []struct {
 		name     string
 		input    string
@@ -39,13 +41,18 @@ func TestLookupAction(t *testing.T) {
 			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12-3A-BC-00-53-02 (Swede Instruments)\n",
 		},
 		{
+			name:     "SingleLineInputWithNoVendorFound",
+			input:    "First line of input with one MAC address 00:11:22:00:53:01 in it.",
+			expected: "00:11:22:00:53:01\n",
+		},
+		{
 			name:     "EmptyInput",
 			input:    "",
 			expected: "",
 		},
 	}
 
-	// Create a test CSV database
+	// Create a test CSV database to be used by the test cases
 	csvData := `Registry,Assignment,Organization Name,Organization Address
 MA-L,00005E,"Banana, Inc.",1 Infinite Loop Cupocoffee CA US 12345
 MA-L,123ABC,Swede Instruments,Storgatan 1 Stockholm SE 12345`
