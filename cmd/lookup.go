@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -129,8 +130,39 @@ var lookupCmd = &cobra.Command{
 			}
 		}
 
-		// Open the OUI database file
+		// Get the OUI database file
 		csv := viper.GetString("csv-file")
+
+		// Check if the CSV file exists and download it if it doesn't
+		_, err = os.Stat(csv)
+		if os.IsNotExist(err) {
+			fmt.Printf("The file '%s' could not be found.\n", csv)
+			fmt.Print("Would you like to download it? (Y/n): ")
+
+			reader := bufio.NewReader(os.Stdin)
+			input, _ := reader.ReadString('\n')
+			input = strings.TrimRight(input, "\r\n")
+
+			if input == "n" || input == "N" {
+				// User cancelled the download so exit the program
+				fmt.Println("File download cancelled.")
+				return nil
+			} else {
+				// User confirmed the download so proceed
+				url := "http://standards-oui.ieee.org/oui/oui.csv"
+
+				// Create the CSV file for writing
+				outfile, err := os.Create(csv)
+				if err != nil {
+					return err
+				}
+
+				// Download the OUI database
+				if err := oui.DownloadDatabase(outfile, url); err != nil {
+					return err
+				}
+			}
+		}
 
 		// Open the CSV file
 		file, err := os.Open(csv)
