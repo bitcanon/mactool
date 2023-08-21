@@ -67,6 +67,9 @@ Second line of input from interactive user input`,
 	}
 }
 
+// TestProcessInteractiveInput tests the ProcessInteractiveInput function
+// by redirecting stdin to a pipe and writing test data to the pipe to
+// simulate user input
 func TestProcessInteractiveInput(t *testing.T) {
 	// Setup test cases
 	tests := []struct {

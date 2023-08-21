@@ -7,6 +7,7 @@ import (
 
 // TestExtractAction tests the extractAction function
 func TestExtractAction(t *testing.T) {
+	// Setup test cases
 	testCases := []struct {
 		name     string
 		input    string
@@ -46,6 +47,7 @@ func TestExtractAction(t *testing.T) {
 		},
 	}
 
+	// Loop through the test cases and run each test
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			// Prepare a buffer to capture the output

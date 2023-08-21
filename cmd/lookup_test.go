@@ -52,11 +52,12 @@ func TestLookupAction(t *testing.T) {
 		},
 	}
 
-	// Create a test CSV database to be used by the test cases
+	// Create a test CSV database, in memory, to be used by the test cases
 	csvData := `Registry,Assignment,Organization Name,Organization Address
 MA-L,00005E,"Banana, Inc.",1 Infinite Loop Cupocoffee CA US 12345
 MA-L,123ABC,Swede Instruments,Storgatan 1 Stockholm SE 12345`
 
+	// Loop through the test cases and run each test
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			// Create a reader for the test CSV database
