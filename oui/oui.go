@@ -28,15 +28,11 @@ import (
 	"net/http"
 )
 
+// Oui represents an OUI entry in the database
 type Oui struct {
-	// The OUI assignment (for example "1A2B3C")
-	Assignment string
-
-	// The organization name
-	Organization string
-
-	// The organization street address
-	Address string
+	Assignment   string // The OUI assignment (for example "1A2B3C")
+	Organization string // The organization name
+	Address      string // The organization street address
 }
 
 // The OUI database
@@ -45,12 +41,20 @@ type OuiDb struct {
 	Entries []Oui
 }
 
-func (db *OuiDb) FindOuiByAssignment(s string) *Oui {
+// FindOuiByAssignment finds an OUI entry by the specified OUI assignment
+// and returns a pointer to the entry if found, or nil if not found.
+// The OUI assignment must be in the format "1A2B3C" (uppercase, no separators).
+func (db *OuiDb) FindOuiByAssignment(assignment string) *Oui {
+	// Loop through the OUI entries
 	for _, entry := range db.Entries {
-		if entry.Assignment == s {
+		// Check if the OUI assignment matches the specified string
+		if entry.Assignment == assignment {
+			// Return the OUI entry if it matches
 			return &entry
 		}
 	}
+
+	// Return nil if no OUI entry was found
 	return nil
 }
 
@@ -86,10 +90,9 @@ func LoadDatabase(r io.Reader) (*OuiDb, error) {
 	return db, nil
 }
 
+// DownloadDatabase downloads the OUI database from the specified URL
+// and writes it to the specified writer.
 func DownloadDatabase(w io.Writer, url string) error {
-	// Download the CSV database
-	// url := "http://standards-oui.ieee.org/oui/oui.csv"
-
 	// Perform the HTTP GET request
 	response, err := http.Get(url)
 	if err != nil {
@@ -142,5 +145,6 @@ func DownloadDatabase(w io.Writer, url string) error {
 	// Print a newline after the progress indicator
 	fmt.Println()
 
+	// No errors occurred during download
 	return nil
 }
