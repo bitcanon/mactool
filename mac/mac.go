@@ -28,9 +28,48 @@ import (
 	"strings"
 )
 
-// ErrInvalidMacAddress is returned when the input string
-// is not a valid MAC address.
+// Errors returned by functions in this package
 var ErrInvalidMacAddress = errors.New("invalid MAC address")
+var ErrInvalidMacAddressLength = errors.New("invalid MAC address length; must be divisible by group size")
+var ErrInvalidGroupSize = errors.New("invalid group size; must be 2 or 4")
+var ErrInvalidCaseOption = errors.New("invalid case option")
+var ErrInvalidDelimiterOption = errors.New("invalid delimiter option")
+
+// CaseOption is used to specify the case of the MAC address.
+type CaseOption int
+
+const (
+	OriginalCase CaseOption = iota
+	Upper
+	Lower
+)
+
+// DelimiterOption is used to specify the delimiter used in the MAC address.
+type DelimiterOption int
+
+const (
+	OriginalDelim DelimiterOption = iota
+	Colon
+	Hyphen
+	Dot
+	None
+)
+
+// MacFormat is used to specify the format of the MAC address.
+type MacFormat struct {
+	Case      CaseOption
+	Delimiter DelimiterOption
+	GroupSize int
+}
+
+// cleanMacAddress removes all non-alphanumeric characters from the MAC address.
+func cleanMacAddress(macAddress string) string {
+	// Use a regular expression to match non-alphanumeric characters
+	reg := regexp.MustCompile("[^A-Fa-f0-9]")
+
+	// Remove all non-alphanumeric characters from the MAC address
+	return reg.ReplaceAllString(macAddress, "")
+}
 
 // extractMacAddresses extracts MAC addresses from the input string.
 // The groupCount parameter is the number of groups of MAC
@@ -56,6 +95,55 @@ func extractMacAddresses(input string, groupCount int, groupSize int) ([]string,
 	// Return the list of MAC addresses found in the input string
 	// and the input string with the MAC addresses removed
 	return addresses, modifiedInput, nil
+}
+
+// findMacDelimiter finds the delimiter used in the MAC address.
+func findMacDelimiter(macAddress string) string {
+	// Check for a colon, dash or period delimiter
+	delimiters := []string{":", "-", "."}
+
+	// Check for each delimiter
+	for _, delimiter := range delimiters {
+		// If the delimiter is found, return it
+		if strings.Contains(macAddress, delimiter) {
+			return delimiter
+		}
+	}
+
+	// No delimiter was found
+	return ""
+}
+
+// formatWithDelimiters formats the MAC address with the specified delimiter
+// and group size. The group size is the number of characters in each group.
+// The delimiter is the character used to separate each group.
+func formatWithDelimiters(macAddress, delimiter string, groupSize int) (string, error) {
+	// Validate groupSize
+	if groupSize != 2 && groupSize != 4 {
+		return "", ErrInvalidGroupSize
+	}
+
+	// Ensure the MAC address contains only alphanumeric characters
+	macAddress = cleanMacAddress(macAddress)
+
+	// Validate length divisibility
+	if len(macAddress)%groupSize != 0 {
+		return "", ErrInvalidMacAddressLength
+	}
+
+	// Length of the MAC address
+	macLength := len(macAddress)
+	groupCount := macLength / groupSize
+
+	// Split the MAC address into groups of characters
+	// and join them with the delimiter
+	groups := make([]string, groupCount)
+	for i := 0; i < groupCount; i++ {
+		groups[i] = macAddress[i*groupSize : i*groupSize+groupSize]
+	}
+
+	// Return the MAC address with the delimiter
+	return strings.Join(groups, delimiter), nil
 }
 
 // FindAllMacAddresses returns a list of MAC addresses found in the input string.
@@ -122,4 +210,51 @@ func ExtractOuiFromMac(macAddress string) (string, error) {
 	} else {
 		return "", ErrInvalidMacAddress
 	}
+}
+
+// FormatMacAddress formats the MAC address with the specified case, delimiter
+// and group size. The group size is the number of characters in each group.
+// The delimiter is the character used to separate each group.
+// Example: 00:00:5E:00:53:01 (Case: Upper, Delimiter: Colon, GroupSize: 2)
+func FormatMacAddress(macAddress string, newFormat MacFormat) (string, error) {
+	// Validate the case option
+	switch newFormat.Case {
+	case Upper:
+		macAddress = strings.ToUpper(macAddress)
+	case Lower:
+		macAddress = strings.ToLower(macAddress)
+	case OriginalCase:
+		// Keep the original case
+	default:
+		// Invalid case option specified
+		return "", ErrInvalidCaseOption
+	}
+
+	// Validate the delimiter option
+	delimiterStr := ""
+	switch newFormat.Delimiter {
+	case Colon:
+		delimiterStr = ":"
+	case Hyphen:
+		delimiterStr = "-"
+	case Dot:
+		delimiterStr = "."
+	case None:
+		delimiterStr = ""
+	case OriginalDelim:
+		// Keep the original delimiter
+		delimiterStr = findMacDelimiter(macAddress)
+	default:
+		// Invalid delimiter option specified
+		return "", ErrInvalidDelimiterOption
+	}
+
+	// Format the MAC address
+	mac, err := formatWithDelimiters(macAddress, delimiterStr, newFormat.GroupSize)
+	if err != nil {
+		return "", err
+	}
+
+	// Return the formatted MAC address
+	return mac, nil
 }
