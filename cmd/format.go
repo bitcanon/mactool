@@ -33,6 +33,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// createMacFormatFromFlags creates a MacFormat struct from the flags.
 func createMacFormatFromFlags(upper bool, lower bool, delimiter string, groupSize int) mac.MacFormat {
 	// Select character case based on flags
 	caseOption := mac.OriginalCase
@@ -63,27 +64,40 @@ func createMacFormatFromFlags(upper bool, lower bool, delimiter string, groupSiz
 	}
 }
 
-// formatAction extracts MAC addresses from the input string,
-// performs reformatting according to the provided format,
-// and prints the result to the output writer.
+// formatAction finds and formats MAC addresses in the input string.
+// The MAC addresses are formatted according to the provided format,
+// inside the input string, and printed to the output writer.
 func formatAction(out io.Writer, format mac.MacFormat, s string) error {
-	// Extract MAC addresses from string
-	macs, err := mac.FindAllMacAddresses(s)
-	if err != nil {
-		return err
-	}
+	// Split the input string into lines
+	lines := strings.Split(s, "\n")
 
-	// Print MAC addresses found in the input string
-	// to the output writer
-	for _, macAddress := range macs {
-		// Format the MAC address
-		formattedMacAddress, err := mac.FormatMacAddress(macAddress, format)
+	lc := len(lines)
+
+	// Process each line separately
+	for i, line := range lines {
+		// Find all MAC addresses in the line
+		macs, err := mac.FindAllMacAddresses(line)
 		if err != nil {
 			return err
 		}
 
-		// Print the formatted MAC address
-		fmt.Fprintln(out, formattedMacAddress)
+		// Loop through each MAC address found in the line
+		for _, m := range macs {
+			// Format the MAC address
+			formattedMacAddress, err := mac.FormatMacAddress(m, format)
+			if err != nil {
+				return err
+			}
+			// Replace the MAC address with the formatted version
+			lines[i] = strings.ReplaceAll(lines[i], m, formattedMacAddress)
+		}
+		// Print the line to the output writer
+		// (without a newline character on the last line)
+		if i == lc-1 {
+			fmt.Fprint(out, lines[i])
+		} else {
+			fmt.Fprintln(out, lines[i])
+		}
 	}
 
 	// No errors occurred
