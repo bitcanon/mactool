@@ -89,7 +89,7 @@ Interactive mode:
 While operating in interactive mode, enter or paste the input string and then press
 Enter to proceed. To exit, use Ctrl+D (Unix) or Ctrl+Z (Windows), followed by Enter.`
 
-// Long help text for the extract command
+// Long help text for the lookup command
 const lookupLong = `Extract MAC addresses from the input string, perform
 vendor lookup, and display the result on the terminal.
 
@@ -98,7 +98,7 @@ standard input (piped data) or interactive input.`
 
 // lookupCmd represents the lookup command
 var lookupCmd = &cobra.Command{
-	Use:          "lookup",
+	Use:          "lookup [input]",
 	Short:        "Lookup vendors of MAC addresses from the input string",
 	Long:         lookupLong,
 	Example:      lookupExample,
