@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -51,9 +52,15 @@ func ProcessInteractiveInput() (string, error) {
 	// Create a scanner to read from standard input
 	scanner := bufio.NewScanner(os.Stdin)
 
-	// Read each line from standard input as the user types.
-	// The loop will exit when the user presses Ctrl+D (Unix)
-	// or Ctrl+Z (Windows).
+	// Tell the user how to finish the input
+	// based on the operating system
+	eofKeys := "CTRL+D"
+	if runtime.GOOS == "windows" {
+		eofKeys = "CTRL+Z"
+	}
+	fmt.Fprintf(os.Stderr, "Please enter the input text. Press %s to finish.\n", eofKeys)
+
+	// Read each line from standard input as the user types
 	for scanner.Scan() {
 		input += fmt.Sprintf("%s\n", scanner.Text())
 	}
