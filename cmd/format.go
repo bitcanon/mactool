@@ -114,7 +114,7 @@ Interactive mode:
   mactool format
 
 Use interactive mode when you intend to conveniently paste and
-format multiple MAC addresses from external sources.`
+process output from a network device containing MAC addresses.`
 
 // Long help text for the format command
 const formatLong = `The format command extracts MAC addresses from the input string,

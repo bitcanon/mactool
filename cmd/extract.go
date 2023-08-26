@@ -60,8 +60,8 @@ const extractExample = `  mactool extract 0000.5e00.5301 00:00:5e:00:53:01 0000-
 Interactive mode:
   mactool extract
 
-While operating in interactive mode, enter or paste the input string and then press
-Enter to proceed. To exit, use Ctrl+D (Unix) or Ctrl+Z (Windows), followed by Enter.`
+Use interactive mode when you intend to conveniently paste and
+process output from a network device containing MAC addresses.`
 
 // Long help text for the extract command
 const extractLong = `Extract MAC addresses from the input string
