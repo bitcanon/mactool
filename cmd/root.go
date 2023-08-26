@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,8 +85,16 @@ func initConfig() {
 		viper.SetConfigName(".mactool")
 	}
 
+	// Check for environment variables prefixed with MACTOOL
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("MACTOOL")
+
 	// Load any environment variable that match an existing config key
 	viper.AutomaticEnv()
+
+	// Print all environment variables loaded in viper
+	// viper.Debug()
 
 	// If a config file is found, read it in.
 	viper.ReadInConfig()

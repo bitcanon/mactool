@@ -26,6 +26,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 )
 
 // Oui represents an OUI entry in the database
@@ -147,4 +150,37 @@ func DownloadDatabase(w io.Writer, url string) error {
 
 	// No errors occurred during download
 	return nil
+}
+
+// GetDefaultDatabasePath returns the path to the OUI
+// database file based on the operating system:
+// Windows: %LOCALAPPDATA%\Mactool\oui.csv
+// Unix:    $HOME/.local/share/mactool/oui.csv
+func GetDefaultDatabasePath() string {
+	// Default OUI database file path
+	defaultOui := "oui.csv"
+
+	// Get the root of the users home directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return defaultOui
+	}
+
+	// Get the path to the OUI database file
+	// based on the operating system
+	var dataDir string
+	if runtime.GOOS == "windows" {
+		dataDir = filepath.Join(homeDir, "AppData", "Local", "Mactool")
+	} else {
+		dataDir = filepath.Join(homeDir, ".local", "share", "mactool")
+	}
+
+	// Create the data directory if it doesn't exist
+	err = os.MkdirAll(dataDir, os.ModePerm)
+	if err != nil {
+		return defaultOui
+	}
+
+	// Return the path to the OUI database file
+	return filepath.Join(dataDir, "oui.csv")
 }
