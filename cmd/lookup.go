@@ -132,6 +132,7 @@ var lookupCmd = &cobra.Command{
 
 		// Get the OUI database file
 		csv := viper.GetString("csv-file")
+		fmt.Printf("Using OUI database file: %s\n", csv)
 
 		// Check if the CSV file exists and download it if it doesn't
 		_, err = os.Stat(csv)
@@ -151,14 +152,23 @@ var lookupCmd = &cobra.Command{
 				// User confirmed the download so proceed
 				url := "http://standards-oui.ieee.org/oui/oui.csv"
 
-				// Create the CSV file for writing
-				outfile, err := os.Create(csv)
+				// Create a temporary file for writing the downloaded file
+				tempFile, err := os.CreateTemp("", "oui.csv")
 				if err != nil {
+					fmt.Println("Error creating temporary file:", err)
+					return err
+				}
+				defer os.Remove(tempFile.Name()) // Clean up the temporary file when done
+
+				// Download the OUI database
+				if err := oui.DownloadDatabase(tempFile, url); err != nil {
 					return err
 				}
 
-				// Download the OUI database
-				if err := oui.DownloadDatabase(outfile, url); err != nil {
+				// Copy the temporary file to the CSV file
+				err = copyFile(tempFile.Name(), csv)
+				if err != nil {
+					fmt.Println("Error copying file:", err)
 					return err
 				}
 			}
@@ -182,14 +192,49 @@ func init() {
 	// Add the lookup command to the root command
 	rootCmd.AddCommand(lookupCmd)
 
-	// Add the --csv-file flag to the lookup command
-	lookupCmd.PersistentFlags().StringP("csv-file", "f", "oui.csv", "path to CSV file")
+	/*
+	  The CSV file can be specified using the following methods,
+	  in order of precedence (1 is highest, 4 is lowest):
+	    1. --csv-file flag
+	    2. MACTOOL_CSV_FILE environment variable
+	    3. .mactool.yaml config file
+	    4. Default CSV file path
+	*/
 
-	// Check for environment variables prefixed with MACTOOL
-	replacer := strings.NewReplacer("-", "_")
-	viper.SetEnvKeyReplacer(replacer)
-	viper.SetEnvPrefix("MACTOOL")
+	// Set a default CSV file path
+	viper.SetDefault("csv-file", oui.GetDefaultDatabasePath())
 
-	// Bind the --csv-file flag to the viper variable
+	// Set to environment variable MACTOOL_CSV_FILE if set
+	err := viper.BindEnv("csv-file")
+	cobra.CheckErr(err)
+
+	// Set to the value of the --csv-file flag if set
+	lookupCmd.PersistentFlags().StringP("csv-file", "f", "", "path to CSV file")
 	viper.BindPFlag("csv-file", lookupCmd.PersistentFlags().Lookup("csv-file"))
+}
+
+// copyFile copies a file from src to dest
+func copyFile(src, dest string) error {
+	// Open the source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Create the destination file
+	destFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	// Copy the contents of the source file to the destination file
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// No errors occurred
+	return nil
 }
