@@ -105,9 +105,9 @@ func formatAction(out io.Writer, format mac.MacFormat, s string) error {
 }
 
 // Example help text for the format command
-const formatExample = `  mactool format 00:00:5e:00:53:01 --lower-case --delimiter . --group-size 4
+const formatExample = `  mactool format 00:00:5e:00:53:01 --lower --delimiter . --group-size 4
   mactool format First address 0000.5E00.5301, second address 00:00:5e:00:53:01, etc. -u -d - -g 2
-  cat macs.txt | mactool format --lower-case --delimiter :
+  cat macs.txt | mactool format --lower --delimiter :
   ip addr | mactool format
 
 Interactive mode:
@@ -160,8 +160,8 @@ var formatCmd = &cobra.Command{
 
 		// Create a MacFormat struct from the flags
 		format := createMacFormatFromFlags(
-			viper.GetBool("upper-case"),
-			viper.GetBool("lower-case"),
+			viper.GetBool("upper"),
+			viper.GetBool("lower"),
 			viper.GetString("delimiter"),
 			viper.GetInt("group-size"),
 		)
@@ -177,8 +177,8 @@ func init() {
 	rootCmd.AddCommand(formatCmd)
 
 	// Persistent flags
-	formatCmd.Flags().BoolP("upper-case", "u", false, "convert MAC addresses to upper case")
-	formatCmd.Flags().BoolP("lower-case", "l", false, "convert MAC addresses to lower case")
+	formatCmd.Flags().BoolP("upper", "u", false, "convert MAC addresses to upper case")
+	formatCmd.Flags().BoolP("lower", "l", false, "convert MAC addresses to lower case")
 	formatCmd.Flags().StringP("delimiter", "d", ":", "delimiter character to use between hex groups")
 	formatCmd.Flags().IntP("group-size", "g", 2, "number of characters in each hex group")
 
@@ -188,8 +188,8 @@ func init() {
 	viper.SetEnvPrefix("MACTOOL")
 
 	// Bind environment variables to flags
-	viper.BindPFlag("upper-case", formatCmd.Flags().Lookup("upper-case"))
-	viper.BindPFlag("lower-case", formatCmd.Flags().Lookup("lower-case"))
+	viper.BindPFlag("upper", formatCmd.Flags().Lookup("upper"))
+	viper.BindPFlag("lower", formatCmd.Flags().Lookup("lower"))
 	viper.BindPFlag("delimiter", formatCmd.Flags().Lookup("delimiter"))
 	viper.BindPFlag("group-size", formatCmd.Flags().Lookup("group-size"))
 }
