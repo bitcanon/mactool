@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -132,7 +133,6 @@ var lookupCmd = &cobra.Command{
 
 		// Get the OUI database file
 		csv := viper.GetString("csv-file")
-		fmt.Printf("Using OUI database file: %s\n", csv)
 
 		// Check if the CSV file exists and download it if it doesn't
 		_, err = os.Stat(csv)
@@ -168,7 +168,6 @@ var lookupCmd = &cobra.Command{
 				// Copy the temporary file to the CSV file
 				err = copyFile(tempFile.Name(), csv)
 				if err != nil {
-					fmt.Println("Error copying file:", err)
 					return err
 				}
 			}
@@ -208,8 +207,16 @@ func init() {
 	err := viper.BindEnv("csv-file")
 	cobra.CheckErr(err)
 
+	// Set default path for the flag help text
+	var defaultPath string
+	if runtime.GOOS == "windows" {
+		defaultPath = "%LOCALAPPDATA%\\Mactool\\oui.csv"
+	} else {
+		defaultPath = "~/.local/share/mactool/oui.csv"
+	}
+
 	// Set to the value of the --csv-file flag if set
-	lookupCmd.PersistentFlags().StringP("csv-file", "f", "", "path to CSV file")
+	lookupCmd.PersistentFlags().StringP("csv-file", "f", "", "path to CSV file (default "+defaultPath+")")
 	viper.BindPFlag("csv-file", lookupCmd.PersistentFlags().Lookup("csv-file"))
 }
 
