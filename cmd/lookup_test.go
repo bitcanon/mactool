@@ -3,6 +3,8 @@ package cmd
 import (
 	"strings"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
 // TestLookupAction tests the lookupAction function
@@ -12,43 +14,69 @@ func TestLookupAction(t *testing.T) {
 		name     string
 		input    string
 		expected string
+		suppress bool
 	}{
 		{
 			name:     "SingleLineInput",
 			input:    "First line of input with one MAC address 00:00:5e:00:53:01 in it.",
 			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n",
+			suppress: false,
 		},
 		{
 			name: "MultiLineInput",
 			input: `First line of input with one MAC address 00:00:5e:00:53:01 in it.
 			Second line of input with one MAC address 00-00-5E-00-53-02 in it.`,
 			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n00-00-5E-00-53-02 (Banana, Inc.)\n",
+			suppress: false,
 		},
 		{
 			name:     "SingleLineInputWithNoMacAddresses",
 			input:    "First line of input with no MAC address in it.",
 			expected: "",
+			suppress: false,
 		},
 		{
 			name: "MultiLineInputWithNoMacAddresses",
 			input: `First line of input with no MAC address in it.
 			Second line of input with no MAC address in it.`,
 			expected: "",
+			suppress: false,
 		},
 		{
 			name:     "SingleLineInputWithMultipleMacAddresses",
 			input:    "First MAC address 00:00:5e:00:53:01 and second MAC address 12-3A-BC-00-53-02.",
 			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12-3A-BC-00-53-02 (Swede Instruments)\n",
+			suppress: false,
 		},
 		{
 			name:     "SingleLineInputWithNoVendorFound",
 			input:    "First line of input with one MAC address 00:11:22:00:53:01 in it.",
 			expected: "00:11:22:00:53:01\n",
+			suppress: false,
 		},
 		{
 			name:     "EmptyInput",
 			input:    "",
 			expected: "",
+			suppress: false,
+		},
+		{
+			name:     "InputWithAllMacAddressesSuppressed",
+			input:    "First MAC address 99:99:99:00:53:01 and second MAC address 99-99-99-00-53-02.",
+			expected: "",
+			suppress: true,
+		},
+		{
+			name:     "InputWithSomeMacAddressesSuppressed",
+			input:    "First MAC address 00:00:5e:00:53:01 and second MAC address 99-99-99-00-53-02.",
+			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n",
+			suppress: true,
+		},
+		{
+			name:     "InputWithNoMacAddressesSuppressed",
+			input:    "First MAC address 00:00:5e:00:53:01 and second MAC address 12-3A-BC-00-53-02.",
+			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12-3A-BC-00-53-02 (Swede Instruments)\n",
+			suppress: true,
 		},
 	}
 
@@ -62,6 +90,9 @@ MA-L,123ABC,Swede Instruments,Storgatan 1 Stockholm SE 12345`
 		t.Run(test.name, func(t *testing.T) {
 			// Create a reader for the test CSV database
 			reader := strings.NewReader(csvData)
+
+			// Set up viper with the suppress-unmatched flag
+			viper.Set("suppress-unmatched", test.suppress)
 
 			// Prepare a buffer to capture the output
 			var output strings.Builder

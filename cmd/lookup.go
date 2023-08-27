@@ -69,7 +69,10 @@ func lookupAction(out io.Writer, csv io.Reader, s string) error {
 			fmt.Fprintf(out, "%s (%s)\n", macAddress, vendor.Organization)
 		} else {
 			// If the vendor was not found, print the MAC address
-			fmt.Fprintln(out, macAddress)
+			// if the --suppress-unmatched flag is not set
+			if !viper.GetBool("suppress-unmatched") {
+				fmt.Fprintln(out, macAddress)
+			}
 		}
 	}
 
@@ -218,6 +221,10 @@ func init() {
 	// Set to the value of the --csv-file flag if set
 	lookupCmd.PersistentFlags().StringP("csv-file", "f", "", "path to CSV file (default "+defaultPath+")")
 	viper.BindPFlag("csv-file", lookupCmd.PersistentFlags().Lookup("csv-file"))
+
+	// Set to the value of the --suppress-unmatched flag if set
+	lookupCmd.PersistentFlags().BoolP("suppress-unmatched", "s", false, "suppress unmatched MAC addresses from output")
+	viper.BindPFlag("suppress-unmatched", lookupCmd.PersistentFlags().Lookup("suppress-unmatched"))
 }
 
 // copyFile copies a file from src to dest
