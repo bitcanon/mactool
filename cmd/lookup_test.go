@@ -14,6 +14,8 @@ func TestLookupAction(t *testing.T) {
 		name     string
 		input    string
 		expected string
+		sortAsc  bool
+		sortDesc bool
 		suppress bool
 	}{
 		{
@@ -78,6 +80,48 @@ func TestLookupAction(t *testing.T) {
 			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12-3A-BC-00-53-02 (Swede Instruments)\n",
 			suppress: true,
 		},
+		{
+			name:     "SingleLineInputWithSortAsc",
+			input:    "First line of input with one MAC address 00:00:5e:00:53:01 in it.",
+			sortAsc:  true,
+			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n",
+		},
+		{
+			name: "MultiLineInputWithSortAsc",
+			input: `First line of input with one MAC address 12:3A:BC:00:53:01 in it.
+			Second line of input with one MAC address 00:00:5e:00:53:01 in it.`,
+			sortAsc:  true,
+			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12:3A:BC:00:53:01 (Swede Instruments)\n",
+		},
+		{
+			name: "MultiLineInputWithSortAscAndDesc",
+			input: `First line of input with one MAC address 12:3A:BC:00:53:01 in it.
+			Second line of input with one MAC address 00:00:5e:00:53:01 in it.`,
+			sortAsc:  true,
+			sortDesc: true,
+			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12:3A:BC:00:53:01 (Swede Instruments)\n",
+		},
+		{
+			name: "MultiLineInputWithSortDesc",
+			input: `First line of input with one MAC address 00:00:5e:00:53:01 in it.
+			Second line of input with one MAC address 12-3A-BC-00-53-02 in it.`,
+			sortDesc: true,
+			expected: "12-3A-BC-00-53-02 (Swede Instruments)\n00:00:5e:00:53:01 (Banana, Inc.)\n",
+		},
+		{
+			name:     "SingleLineWithSortAscAndSuppress",
+			input:    "MAC1: 12:3A:BC:00:53:01, MAC2: 00:00:5e:00:53:01 and MAC3: 99-99-99-00-53-02.",
+			sortAsc:  true,
+			suppress: true,
+			expected: "00:00:5e:00:53:01 (Banana, Inc.)\n12:3A:BC:00:53:01 (Swede Instruments)\n",
+		},
+		{
+			name:     "SingleLineWithSortDescAndSuppress",
+			input:    "MAC1: 00:00:5e:00:53:01, MAC2: 99-99-99-00-53-02 and MAC3: 12:3A:BC:00:53:01.",
+			sortDesc: true,
+			suppress: true,
+			expected: "12:3A:BC:00:53:01 (Swede Instruments)\n00:00:5e:00:53:01 (Banana, Inc.)\n",
+		},
 	}
 
 	// Create a test CSV database, in memory, to be used by the test cases
@@ -93,6 +137,10 @@ MA-L,123ABC,Swede Instruments,Storgatan 1 Stockholm SE 12345`
 
 			// Set up viper with the suppress-unmatched flag
 			viper.Set("suppress-unmatched", test.suppress)
+
+			// Set the sort flags
+			viper.Set("lookup-sort-asc", test.sortAsc)
+			viper.Set("lookup-sort-desc", test.sortDesc)
 
 			// Prepare a buffer to capture the output
 			var output strings.Builder
