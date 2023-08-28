@@ -27,6 +27,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -44,6 +45,13 @@ func lookupAction(out io.Writer, csv io.Reader, s string) error {
 	macs, err := mac.FindAllMacAddresses(s)
 	if err != nil {
 		return err
+	}
+
+	// Sort MAC addresses in ascending or descending order
+	if viper.GetBool("lookup-sort-asc") {
+		sort.Strings(macs)
+	} else if viper.GetBool("lookup-sort-desc") {
+		sort.Sort(sort.Reverse(sort.StringSlice(macs)))
 	}
 
 	// Load the OUI database into memory
@@ -223,8 +231,16 @@ func init() {
 	viper.BindPFlag("csv-file", lookupCmd.PersistentFlags().Lookup("csv-file"))
 
 	// Set to the value of the --suppress-unmatched flag if set
-	lookupCmd.PersistentFlags().BoolP("suppress-unmatched", "s", false, "suppress unmatched MAC addresses from output")
+	lookupCmd.PersistentFlags().BoolP("suppress-unmatched", "u", false, "suppress unmatched MAC addresses from output")
 	viper.BindPFlag("suppress-unmatched", lookupCmd.PersistentFlags().Lookup("suppress-unmatched"))
+
+	// Set to the value of the --sort-asc flag if set
+	lookupCmd.Flags().BoolP("sort-asc", "s", false, "sort output in ascending order")
+	viper.BindPFlag("lookup-sort-asc", lookupCmd.Flags().Lookup("sort-asc"))
+
+	// Set to the value of the --sort-desc flag if set
+	lookupCmd.Flags().BoolP("sort-desc", "S", false, "sort output in descending order")
+	viper.BindPFlag("lookup-sort-desc", lookupCmd.Flags().Lookup("sort-desc"))
 }
 
 // copyFile copies a file from src to dest

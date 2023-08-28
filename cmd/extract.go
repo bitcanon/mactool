@@ -25,11 +25,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/bitcanon/mactool/cli"
 	"github.com/bitcanon/mactool/mac"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // extractAction extracts MAC addresses from the input string
@@ -39,6 +41,13 @@ func extractAction(out io.Writer, s string) error {
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+
+	// Sort MAC addresses in ascending or descending order
+	if viper.GetBool("extract-sort-asc") {
+		sort.Strings(macs)
+	} else if viper.GetBool("extract-sort-desc") {
+		sort.Sort(sort.Reverse(sort.StringSlice(macs)))
 	}
 
 	// Print MAC addresses found in the input string
@@ -109,15 +118,14 @@ var extractCmd = &cobra.Command{
 }
 
 func init() {
+	// Add the extract command to the root command
 	rootCmd.AddCommand(extractCmd)
 
-	// Here you will define your flags and configuration settings.
+	// Set to the value of the --sort-asc flag if set
+	extractCmd.Flags().BoolP("sort-asc", "s", false, "sort output in ascending order")
+	viper.BindPFlag("extract-sort-asc", extractCmd.Flags().Lookup("sort-asc"))
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// extractCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// extractCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Set to the value of the --sort-desc flag if set
+	extractCmd.Flags().BoolP("sort-desc", "S", false, "sort output in descending order")
+	viper.BindPFlag("extract-sort-desc", extractCmd.Flags().Lookup("sort-desc"))
 }
