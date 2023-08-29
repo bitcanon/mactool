@@ -29,6 +29,7 @@ import (
 
 	"github.com/bitcanon/mactool/cli"
 	"github.com/bitcanon/mactool/mac"
+	"github.com/bitcanon/mactool/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -68,10 +69,13 @@ func createMacFormatFromFlags(upper bool, lower bool, delimiter string, groupSiz
 // The MAC addresses are formatted according to the provided format,
 // inside the input string, and printed to the output writer.
 func formatAction(out io.Writer, format mac.MacFormat, s string) error {
+	// If the input string is empty, return without doing anything
+	if len(s) == 0 {
+		return nil
+	}
+
 	// Split the input string into lines
 	lines := strings.Split(s, "\n")
-
-	lc := len(lines)
 
 	// Process each line separately
 	for i, line := range lines {
@@ -91,13 +95,9 @@ func formatAction(out io.Writer, format mac.MacFormat, s string) error {
 			// Replace the MAC address with the formatted version
 			lines[i] = strings.ReplaceAll(lines[i], m, formattedMacAddress)
 		}
+
 		// Print the line to the output writer
-		// (without a newline character on the last line)
-		if i == lc-1 {
-			fmt.Fprint(out, lines[i])
-		} else {
-			fmt.Fprintln(out, lines[i])
-		}
+		fmt.Fprintln(out, lines[i])
 	}
 
 	// No errors occurred
@@ -166,9 +166,20 @@ var formatCmd = &cobra.Command{
 			viper.GetInt("group-size"),
 		)
 
+		// Determine the output file using Viper
+		outputFile := viper.GetString("format.output")
+		append := viper.GetBool("format.append")
+
+		// Get the output stream
+		outStream, err := utils.GetOutputStream(outputFile, append)
+		if err != nil {
+			return err
+		}
+		defer outStream.Close()
+
 		// Format the MAC addresses found in the input string
 		// using the format specified by the flags
-		return formatAction(os.Stdout, format, input)
+		return formatAction(outStream, format, input)
 	},
 }
 
@@ -176,20 +187,36 @@ func init() {
 	// Add the format command to the root command
 	rootCmd.AddCommand(formatCmd)
 
-	// Persistent flags
+	// Add the --upper flag to the format command
 	formatCmd.Flags().BoolP("upper", "u", false, "convert MAC addresses to upper case")
+	viper.BindPFlag("upper", formatCmd.Flags().Lookup("upper"))
+
+	// Add the --lower flag to the format command
 	formatCmd.Flags().BoolP("lower", "l", false, "convert MAC addresses to lower case")
+	viper.BindPFlag("lower", formatCmd.Flags().Lookup("lower"))
+
+	// Add the --delimiter flag to the format command
 	formatCmd.Flags().StringP("delimiter", "d", ":", "delimiter character to use between hex groups")
+	viper.BindPFlag("delimiter", formatCmd.Flags().Lookup("delimiter"))
+
+	// Add the --group-size flag to the format command
 	formatCmd.Flags().IntP("group-size", "g", 2, "number of characters in each hex group")
+	viper.BindPFlag("group-size", formatCmd.Flags().Lookup("group-size"))
+
+	// Add flag for input file path
+	formatCmd.Flags().StringP("input", "i", "", "read input from file")
+	viper.BindPFlag("format.input", formatCmd.Flags().Lookup("input"))
+
+	// Add flag for output file path
+	formatCmd.Flags().StringP("output", "o", "", "write output to file")
+	viper.BindPFlag("format.output", formatCmd.Flags().Lookup("output"))
+
+	// Set to the value of the --append flag if set
+	formatCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
+	viper.BindPFlag("format.append", formatCmd.Flags().Lookup("append"))
 
 	// Check for environment variables prefixed with MACTOOL
 	replacer := strings.NewReplacer("-", "_")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.SetEnvPrefix("MACTOOL")
-
-	// Bind environment variables to flags
-	viper.BindPFlag("upper", formatCmd.Flags().Lookup("upper"))
-	viper.BindPFlag("lower", formatCmd.Flags().Lookup("lower"))
-	viper.BindPFlag("delimiter", formatCmd.Flags().Lookup("delimiter"))
-	viper.BindPFlag("group-size", formatCmd.Flags().Lookup("group-size"))
 }
