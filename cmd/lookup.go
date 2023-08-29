@@ -36,6 +36,7 @@ import (
 	"github.com/bitcanon/mactool/cli"
 	"github.com/bitcanon/mactool/mac"
 	"github.com/bitcanon/mactool/oui"
+	"github.com/bitcanon/mactool/utils"
 )
 
 // lookupAction extracts MAC addresses from the input string,
@@ -48,9 +49,9 @@ func lookupAction(out io.Writer, csv io.Reader, s string) error {
 	}
 
 	// Sort MAC addresses in ascending or descending order
-	if viper.GetBool("lookup-sort-asc") {
+	if viper.GetBool("lookup.sort-asc") {
 		sort.Strings(macs)
-	} else if viper.GetBool("lookup-sort-desc") {
+	} else if viper.GetBool("lookup.sort-desc") {
 		sort.Sort(sort.Reverse(sort.StringSlice(macs)))
 	}
 
@@ -191,9 +192,20 @@ var lookupCmd = &cobra.Command{
 		}
 		defer file.Close()
 
+		// Determine the output file using Viper
+		outputFile := viper.GetString("lookup.output")
+		append := viper.GetBool("lookup.append")
+
+		// Get the output stream
+		outStream, err := utils.GetOutputStream(outputFile, append)
+		if err != nil {
+			return err
+		}
+		defer outStream.Close()
+
 		// Extract MAC addresses from string and
 		// perform vendor lookup on each address
-		return lookupAction(os.Stdout, file, input)
+		return lookupAction(outStream, file, input)
 	},
 }
 
@@ -236,11 +248,23 @@ func init() {
 
 	// Set to the value of the --sort-asc flag if set
 	lookupCmd.Flags().BoolP("sort-asc", "s", false, "sort output in ascending order")
-	viper.BindPFlag("lookup-sort-asc", lookupCmd.Flags().Lookup("sort-asc"))
+	viper.BindPFlag("lookup.sort-asc", lookupCmd.Flags().Lookup("sort-asc"))
 
 	// Set to the value of the --sort-desc flag if set
 	lookupCmd.Flags().BoolP("sort-desc", "S", false, "sort output in descending order")
-	viper.BindPFlag("lookup-sort-desc", lookupCmd.Flags().Lookup("sort-desc"))
+	viper.BindPFlag("lookup.sort-desc", lookupCmd.Flags().Lookup("sort-desc"))
+
+	// Add flag for input file path
+	lookupCmd.Flags().StringP("input", "i", "", "read input from file")
+	viper.BindPFlag("lookup.input", lookupCmd.Flags().Lookup("input"))
+
+	// Add flag for output file path
+	lookupCmd.Flags().StringP("output", "o", "", "write output to file")
+	viper.BindPFlag("lookup.output", lookupCmd.Flags().Lookup("output"))
+
+	// Set to the value of the --append flag if set
+	lookupCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
+	viper.BindPFlag("lookup.append", lookupCmd.Flags().Lookup("append"))
 }
 
 // copyFile copies a file from src to dest

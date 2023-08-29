@@ -30,6 +30,7 @@ import (
 
 	"github.com/bitcanon/mactool/cli"
 	"github.com/bitcanon/mactool/mac"
+	"github.com/bitcanon/mactool/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -44,9 +45,9 @@ func extractAction(out io.Writer, s string) error {
 	}
 
 	// Sort MAC addresses in ascending or descending order
-	if viper.GetBool("extract-sort-asc") {
+	if viper.GetBool("extract.sort-asc") {
 		sort.Strings(macs)
-	} else if viper.GetBool("extract-sort-desc") {
+	} else if viper.GetBool("extract.sort-desc") {
 		sort.Sort(sort.Reverse(sort.StringSlice(macs)))
 	}
 
@@ -111,9 +112,20 @@ var extractCmd = &cobra.Command{
 			}
 		}
 
+		// Determine the output file using Viper
+		outputFile := viper.GetString("extract.output")
+		append := viper.GetBool("extract.append")
+
+		// Get the output stream
+		outStream, err := utils.GetOutputStream(outputFile, append)
+		if err != nil {
+			return err
+		}
+		defer outStream.Close()
+
 		// Extract MAC addresses from string and
 		// print them to standard output
-		return extractAction(os.Stdout, input)
+		return extractAction(outStream, input)
 	},
 }
 
@@ -123,9 +135,21 @@ func init() {
 
 	// Set to the value of the --sort-asc flag if set
 	extractCmd.Flags().BoolP("sort-asc", "s", false, "sort output in ascending order")
-	viper.BindPFlag("extract-sort-asc", extractCmd.Flags().Lookup("sort-asc"))
+	viper.BindPFlag("extract.sort-asc", extractCmd.Flags().Lookup("sort-asc"))
 
 	// Set to the value of the --sort-desc flag if set
 	extractCmd.Flags().BoolP("sort-desc", "S", false, "sort output in descending order")
-	viper.BindPFlag("extract-sort-desc", extractCmd.Flags().Lookup("sort-desc"))
+	viper.BindPFlag("extract.sort-desc", extractCmd.Flags().Lookup("sort-desc"))
+
+	// Add flag for input file path
+	extractCmd.Flags().StringP("input", "i", "", "read input from file")
+	viper.BindPFlag("extract.input", extractCmd.Flags().Lookup("input"))
+
+	// Add flag for output file path
+	extractCmd.Flags().StringP("output", "o", "", "write output to file")
+	viper.BindPFlag("extract.output", extractCmd.Flags().Lookup("output"))
+
+	// Set to the value of the --append flag if set
+	extractCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
+	viper.BindPFlag("extract.append", extractCmd.Flags().Lookup("append"))
 }
