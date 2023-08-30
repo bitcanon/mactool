@@ -121,8 +121,14 @@ var lookupCmd = &cobra.Command{
 		var input string
 		var err error
 
-		// Check if data is being piped or redirected to stdin
-		if stat, _ := os.Stdin.Stat(); (stat.Mode() & os.ModeCharDevice) == 0 {
+		// Check if data is being piped, read from file or redirected to stdin
+		if viper.GetString("lookup.input") != "" {
+			// Read input from file
+			input, err = cli.ProcessFile(viper.GetString("lookup.input"))
+			if err != nil {
+				return err
+			}
+		} else if stat, _ := os.Stdin.Stat(); (stat.Mode() & os.ModeCharDevice) == 0 {
 			// Process data from pipe or redirection (stdin)
 			input, err = cli.ProcessStdin()
 			if err != nil {

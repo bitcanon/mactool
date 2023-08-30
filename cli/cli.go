@@ -30,7 +30,7 @@ import (
 	"strings"
 )
 
-// processStdin reads all data from standard input
+// ProcessStdin reads all data from standard input
 // and returns the input as a string
 func ProcessStdin() (string, error) {
 	// Read all data from standard input
@@ -43,7 +43,7 @@ func ProcessStdin() (string, error) {
 	return string(input), nil
 }
 
-// processInteractiveInput processes the interactive input
+// ProcessInteractiveInput processes the interactive input
 // and extracts MAC addresses from the input string
 func ProcessInteractiveInput() (string, error) {
 	// A string for the user input
@@ -61,6 +61,39 @@ func ProcessInteractiveInput() (string, error) {
 	fmt.Fprintf(os.Stderr, "Please enter the input text. Press %s to finish.\n", eofKeys)
 
 	// Read each line from standard input as the user types
+	for scanner.Scan() {
+		input += fmt.Sprintf("%s\n", scanner.Text())
+	}
+
+	// Remove the trailing newline character
+	input = strings.TrimRight(input, "\n")
+
+	// Check for errors that may have occurred while reading
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	// Return the input string on success
+	return input, nil
+}
+
+// ProcessFile reads all data from the specified file
+// and returns the input as a string
+func ProcessFile(filename string) (string, error) {
+	// Open the input file
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Create a scanner to read from the file
+	scanner := bufio.NewScanner(file)
+
+	// A string for the file contents
+	var input string
+
+	// Read each line from the file
 	for scanner.Scan() {
 		input += fmt.Sprintf("%s\n", scanner.Text())
 	}
