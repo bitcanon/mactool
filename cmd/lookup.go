@@ -41,7 +41,7 @@ import (
 
 // lookupAction extracts MAC addresses from the input string,
 // performs vendor lookup, and prints the result to the output writer.
-func lookupAction(out io.Writer, csv io.Reader, s string) error {
+func lookupAction(out io.Writer, ouiCsvFile io.Reader, s string) error {
 	// Extract MAC addresses from string
 	macs, err := mac.FindAllMacAddresses(s)
 	if err != nil {
@@ -56,7 +56,7 @@ func lookupAction(out io.Writer, csv io.Reader, s string) error {
 	}
 
 	// Load the OUI database into memory
-	db, err := oui.LoadDatabase(csv)
+	db, err := oui.LoadDatabase(ouiCsvFile)
 	if err != nil {
 		return err
 	}
@@ -74,8 +74,17 @@ func lookupAction(out io.Writer, csv io.Reader, s string) error {
 		vendor := db.FindOuiByAssignment(assignment)
 
 		if vendor != nil {
-			// If the vendor was found, print the vendor name
-			fmt.Fprintf(out, "%s (%s)\n", macAddress, vendor.Organization)
+			// Write in CSV format if the --csv flag is set
+			if viper.GetBool("lookup.csv") {
+				csvRow, err := utils.ConvertStringSliceToCSV([]string{macAddress, vendor.Organization, vendor.Address})
+				if err != nil {
+					return err
+				}
+				fmt.Fprint(out, csvRow)
+			} else {
+				// If the vendor was found, print the vendor name
+				fmt.Fprintf(out, "%s (%s)\n", macAddress, vendor.Organization)
+			}
 		} else {
 			// If the vendor was not found, print the MAC address
 			// if the --suppress-unmatched flag is not set
@@ -150,7 +159,7 @@ var lookupCmd = &cobra.Command{
 		}
 
 		// Get the OUI database file
-		csv := viper.GetString("csv-file")
+		csv := viper.GetString("oui-file")
 
 		// Check if the CSV file exists and download it if it doesn't
 		_, err = os.Stat(csv)
@@ -223,17 +232,17 @@ func init() {
 	/*
 	  The CSV file can be specified using the following methods,
 	  in order of precedence (1 is highest, 4 is lowest):
-	    1. --csv-file flag
+	    1. --oui-file flag
 	    2. MACTOOL_CSV_FILE environment variable
 	    3. .mactool.yaml config file
 	    4. Default CSV file path
 	*/
 
 	// Set a default CSV file path
-	viper.SetDefault("csv-file", oui.GetDefaultDatabasePath())
+	viper.SetDefault("oui-file", oui.GetDefaultDatabasePath())
 
 	// Set to environment variable MACTOOL_CSV_FILE if set
-	err := viper.BindEnv("csv-file")
+	err := viper.BindEnv("oui-file")
 	cobra.CheckErr(err)
 
 	// Set default path for the flag help text
@@ -244,9 +253,9 @@ func init() {
 		defaultPath = "~/.local/share/mactool/oui.csv"
 	}
 
-	// Set to the value of the --csv-file flag if set
-	lookupCmd.PersistentFlags().StringP("csv-file", "f", "", "path to CSV file (default "+defaultPath+")")
-	viper.BindPFlag("csv-file", lookupCmd.PersistentFlags().Lookup("csv-file"))
+	// Set to the value of the --oui-file flag if set
+	lookupCmd.PersistentFlags().StringP("oui-file", "O", "", "path to OUI CSV file (default "+defaultPath+")")
+	viper.BindPFlag("oui-file", lookupCmd.PersistentFlags().Lookup("oui-file"))
 
 	// Set to the value of the --suppress-unmatched flag if set
 	lookupCmd.PersistentFlags().BoolP("suppress-unmatched", "u", false, "suppress unmatched MAC addresses from output")
@@ -271,6 +280,10 @@ func init() {
 	// Set to the value of the --append flag if set
 	lookupCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
 	viper.BindPFlag("lookup.append", lookupCmd.Flags().Lookup("append"))
+
+	// Set to the value of the --csv flag if set
+	lookupCmd.Flags().BoolP("csv", "c", false, "write output in CSV format")
+	viper.BindPFlag("lookup.csv", lookupCmd.Flags().Lookup("csv"))
 }
 
 // copyFile copies a file from src to dest
