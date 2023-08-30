@@ -137,3 +137,60 @@ Second line of input from interactive user input`,
 		})
 	}
 }
+
+// TestProcessFile tests the ProcessFile function
+// by creating a temporary file and writing test
+// data to it to simulate user input. The content
+// of the file is then read and compared to the
+// expected values
+func TestProcessFile(t *testing.T) {
+	// Test to read a file
+	t.Run("ReadFile", func(t *testing.T) {
+		content := "Line 1\nLine 2\nLine 3"
+		tempFile, err := os.CreateTemp("", "test")
+		if err != nil {
+			t.Fatalf("failed to create temp file: %v", err)
+		}
+		defer os.Remove(tempFile.Name())
+		defer tempFile.Close()
+
+		_, err = tempFile.WriteString(content)
+		if err != nil {
+			t.Fatalf("failed to write to temp file: %v", err)
+		}
+
+		input, err := cli.ProcessFile(tempFile.Name())
+		if err != nil {
+			t.Errorf("fxpected no error, but got %v", err)
+		}
+		if input != content {
+			t.Errorf("expected content:\n'%s'\n\nbut got:\n'%s'", content, input)
+		}
+	})
+
+	// Test to read a file that does not exist
+	t.Run("FileNotFound", func(t *testing.T) {
+		_, err := cli.ProcessFile("nonexistent.txt")
+		if err == nil {
+			t.Errorf("expected error, but got nil")
+		}
+	})
+
+	// Test to read an empty file
+	t.Run("EmptyFile", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test")
+		if err != nil {
+			t.Fatalf("failed to create temp file: %v", err)
+		}
+		defer os.Remove(tempFile.Name())
+		defer tempFile.Close()
+
+		input, err := cli.ProcessFile(tempFile.Name())
+		if err != nil {
+			t.Errorf("expected no error, but got: %v", err)
+		}
+		if input != "" {
+			t.Errorf("expected empty input, but got: %s", input)
+		}
+	})
+}
