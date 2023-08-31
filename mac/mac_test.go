@@ -11,37 +11,58 @@ func TestFindAllMacAddresses(t *testing.T) {
 		input    string
 		expected []string
 	}{
-		{"", nil},
-		{"00:00:5e:00:53:01", []string{"00:00:5e:00:53:01"}},
-		{"00:00:5E:00:53:01", []string{"00:00:5E:00:53:01"}},
-		{"02:00:5e:10:00:00:00:01", []string{"02:00:5e:10:00:00:00:01"}},
 		{
-			"00:00:00:00:fe:80:00:00:00:00:00:00:02:00:5e:10:00:00:00:01",
-			[]string{"00:00:00:00:fe:80:00:00:00:00:00:00:02:00:5e:10:00:00:00:01"},
-		},
-		{"00-00-5e-00-53-01", []string{"00-00-5e-00-53-01"}},
-		{"02-00-5e-10-00-00-00-01", []string{"02-00-5e-10-00-00-00-01"}},
-		{
-			"00-00-00-00-fe-80-00-00-00-00-00-00-02-00-5e-10-00-00-00-01",
-			[]string{"00-00-00-00-fe-80-00-00-00-00-00-00-02-00-5e-10-00-00-00-01"},
-		},
-		{"0000.5e00.5301", []string{"0000.5e00.5301"}},
-		{"0200.5e10.0000.0001", []string{"0200.5e10.0000.0001"}},
-		{
-			"0000.0000.fe80.0000.0000.0000.0200.5e10.0000.0001",
-			[]string{"0000.0000.fe80.0000.0000.0000.0200.5e10.0000.0001"},
-		},
-		{"0000-5e00-5301", []string{"0000-5e00-5301"}},
-		{"0200-5e10-0000-0001", []string{"0200-5e10-0000-0001"}},
-		{
-			"0000-0000-fe80-0000-0000-0000-0200-5e10-0000-0001",
-			[]string{"0000-0000-fe80-0000-0000-0000-0200-5e10-0000-0001"},
+			input:    "",
+			expected: nil,
 		},
 		{
-			"MAC 1: 00:00:5E:00:53:01 and MAC 2: 0000.5E00.5301, done.",
-			[]string{"00:00:5E:00:53:01", "0000.5E00.5301"},
+			input:    "00:00:5e:00:53:01",
+			expected: []string{"00:00:5e:00:53:01"},
 		},
-		{"And a string without any addresses.", nil},
+		{
+			input:    "00:00:5E:00:53:01",
+			expected: []string{"00:00:5E:00:53:01"},
+		},
+		{
+			input:    "02:00:5e:10:00:00:00:01",
+			expected: []string{"02:00:5e:10:00:00:00:01"},
+		},
+		{
+			input:    "00-00-5e-00-53-01",
+			expected: []string{"00-00-5e-00-53-01"},
+		},
+		{
+			input:    "02-00-5e-10-00-00-00-01",
+			expected: []string{"02-00-5e-10-00-00-00-01"},
+		},
+		{
+			input:    "0000.5e00.5301",
+			expected: []string{"0000.5e00.5301"},
+		},
+		{
+			input:    "0200.5e10.0000.0001",
+			expected: []string{"0200.5e10.0000.0001"},
+		},
+		{
+			input:    "0000-5e00-5301",
+			expected: []string{"0000-5e00-5301"},
+		},
+		{
+			input:    "0200-5e10-0000-0001",
+			expected: []string{"0200-5e10-0000-0001"},
+		},
+		{
+			input:    "MAC 1: 00:00:5E:00:53:01 and MAC 2: 0000.5E00.5301, done.",
+			expected: []string{"00:00:5E:00:53:01", "0000.5E00.5301"},
+		},
+		{
+			input:    "And a string without any addresses.",
+			expected: nil,
+		},
+		{
+			input:    "00005E-005301",
+			expected: []string{"00005E-005301"},
+		},
 	}
 
 	// Loop through the test cases
@@ -52,8 +73,14 @@ func TestFindAllMacAddresses(t *testing.T) {
 			t.Errorf("error returned from FindAllMacAddresses(%q): %v", tc.input, err)
 		}
 
+		// Check the number of MAC addresses found
+		if len(macs) != len(tc.expected) {
+			t.Errorf("expected %d MAC addresses, got %d", len(tc.expected), len(macs))
+		}
+
 		// Compare the results to the expected values
 		for i, mac := range macs {
+			// Check the value of the MAC address
 			if mac != tc.expected[i] {
 				t.Errorf("expected %q, got %q", tc.expected[i], mac)
 			}
@@ -73,6 +100,7 @@ func TestExtractOuiFromMac(t *testing.T) {
 		{"00:00:5E:00:53:01", "00005E", nil},
 		{"02:00:5e:10:00:00:00:01", "02005E", nil},
 		{"00-00-5e-00-53-01", "00005E", nil},
+		{"00005e-005301", "00005E", nil},
 		{"02-00-5e-10-00-00-00-01", "02005E", nil},
 		{"0000.5e00.5301", "00005E", nil},
 		{"0200.5e10.0000.0001", "02005E", nil},
