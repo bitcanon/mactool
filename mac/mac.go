@@ -153,15 +153,14 @@ func FindAllMacAddresses(s string) ([]string, error) {
 
 	// Define the MAC address systems to search for
 	macSystem := []struct {
-		groupSize int
-		numGroups int
+		groupCount int
+		groupSize  int
 	}{
-		{20, 2}, // IPoIB  : 00:00:00:00:fe:80:00:00:00:00:00:00:02:00:5e:10:00:00:00:01
-		{8, 2},  // EUI-64 : 02:00:5e:10:00:00:00:01
-		{6, 2},  // EUI-48 : 00:00:5e:00:53:01
-		{10, 4}, // IPoIB  : 0000.0000.fe80.0000.0000.0000.0200.5e10.0000.0001
-		{4, 4},  // EUI-64 : 0200.5e10.0000.0001
-		{3, 4},  // EUI-48 : 0000.5e00.5301
+		{8, 2}, // EUI-64 : 02:00:5e:10:00:00:00:01
+		{4, 4}, // EUI-64 : 0200.5e10.0000.0001
+		{6, 2}, // EUI-48 : 00:00:5e:00:53:01
+		{3, 4}, // EUI-48 : 0000.5e00.5301
+		{2, 6}, // EUI-48 : 00005e-005301
 	}
 
 	// Extract MAC addresses from the input string
@@ -173,7 +172,7 @@ func FindAllMacAddresses(s string) ([]string, error) {
 		// Extract MAC addresses from the output string. The output string is
 		// updated with each iteration to remove the MAC addresses that were
 		// found in the previous iteration.
-		results, processedOutput, err := extractMacAddresses(input, ms.groupSize, ms.numGroups)
+		results, processedOutput, err := extractMacAddresses(input, ms.groupCount, ms.groupSize)
 		if err != nil {
 			return nil, err
 		}
