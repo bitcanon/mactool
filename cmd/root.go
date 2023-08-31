@@ -33,7 +33,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Version: "1.1.0",
+	Version: "1.1.1",
 	Use:     "mactool",
 	Short:   "Simplify MAC Address Tasks on the Command Line",
 	Long: `Simplify MAC Address Tasks on the Command Line
