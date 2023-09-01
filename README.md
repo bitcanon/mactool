@@ -7,7 +7,7 @@ MAC Tool is a command-line utility designed to simplify common tasks related to 
 MAC Tool offers versatile functionality:
 
 - **Extraction**: You can input text directly, pipe it, or read from a file into MAC Tool, and it will efficiently extract MAC addresses from the provided content.
-- **Formatting**: MAC Tool enables you to transform MAC addresses with ease. You have the flexibility to change the formatting, including altering the separator character from colons to hyphens, catering to your specific needs.
+- **Formatting**: MAC Tool enables you to transform MAC addresses with ease. You have the flexibility to change the formatting, including altering the separator character to colons (`:`), hyphens (`-`) and periods (`.`), catering to your specific needs.
 - **Vendor Lookup**: Additionally, MAC Tool empowers you to quickly retrieve vendor information associated with MAC addresses, simplifying network management and analysis tasks.
 
 ## Usage
@@ -44,11 +44,14 @@ Here's a short instruction on how to get started using the MAC Tool application 
 
 3. **Download and Extract the Executable**:
 
-   When you click on the release version to download, you will typically receive a compressed archive file (e.g., a `.zip` or `.tar.gz` file) that contains the MAC Tool executable. Download this compressed archive.
+   When you click on the release version to download, you will typically receive a compressed archive file (e.g., a `.zip` or `.tgz` file) that contains the MAC Tool executable. Download this compressed archive and extract the executable from it using your preferred archive utility.
+
+   * If you are using Windows, you will receive a `.zip` file. Just double-click the file and extract the executable.
+   * If you are using Linux, you will receive a `.tgz` file. Extract the executable with `tar xvf mactool-linux-<arch>-1.x.x.tgz`.
 
 4. **Place the Executable in Your PATH**:
 
-   Once the executable is downloaded, move it to a directory that is included in your system's PATH. This ensures that you can run the `mactool` command from any location in your terminal.
+   Once the executable is downloaded and extracted, move it to a directory that is included in your systems PATH. This ensures that you can run the `mactool` command from any location in your terminal.
 
 5. **Verify Installation**:
 
@@ -73,7 +76,14 @@ To extract MAC addresses from a text string, use the `extract` command. For exam
 mactool extract "Here are some MAC addresses: 00:1A:2B:3C:4D:5E, 11-22-33-44-55-66"
 ```
 
-This command will extract and display the MAC addresses found in the input string.
+This command will extract and display the MAC addresses found in the input string:
+    
+```bash
+00:1A:2B:3C:4D:5E
+11-22-33-44-55-66
+```
+
+For more details on the `extract` command, please refer to [Extract Command Documentation](https://github.com/bitcanon/mactool/wiki/Extract-Command).
 
 ### Format MAC Addresses
 
@@ -83,17 +93,28 @@ You can change the format of MAC addresses using the `format` command. For insta
 mactool format "00:1A:2B:3C:4D:5E" --delimiter="-" --lower
 ```
 
-This will format the MAC address with hyphens instead of colons.
+This will format the MAC address with hyphens instead of colons and in lowercase:
+```bash
+00-1a-2b-3c-4d-5e
+```
+
+For more details on the `format` command, please refer to [Format Command Documentation](https://github.com/bitcanon/mactool/wiki/Format-Command).
 
 ### Lookup Vendors
 
 To lookup vendors of MAC addresses, utilize the `lookup` command. Here's an example:
 
 ```bash
-mactool lookup "00:1A:2B:3C:4D:5E"
+mactool lookup "Let's lookup some MACs 00:1A:2B:3C:4D:5E, 00-11-22-33-44-55, and so on..."
 ```
 
-This will provide you with information about the vendor associated with the given MAC address.
+This will provide you with information about the vendor associated with the given MAC address:
+```bash
+00:1A:2B:3C:4D:5E (Ayecom Technology Co., Ltd.)
+00-11-22-33-44-55 (CIMSYS Inc)
+```
+
+For more details on the `lookup` command, please refer to [Lookup Command Documentation](https://github.com/bitcanon/mactool/wiki/Lookup-Command).
 
 ## Configuration
 
