@@ -20,6 +20,7 @@ mactool [command]
 
 - `extract`: Extract MAC addresses from the input string
 - `format`: Change format of MAC addresses from the input string
+- `info`: Print configuration and database information
 - `lookup`: Lookup vendors of MAC addresses from the input string
 
 ## Flags
@@ -45,9 +46,6 @@ Here's a short instruction on how to get started using the MAC Tool application 
 3. **Download and Extract the Executable**:
 
    When you click on the release version to download, you will typically receive a compressed archive file (e.g., a `.zip` or `.tgz` file) that contains the MAC Tool executable. Download this compressed archive and extract the executable from it using your preferred archive utility.
-
-   * If you are using Windows, you will receive a `.zip` file. Just double-click the file and extract the executable.
-   * If you are using Linux, you will receive a `.tgz` file. Extract the executable with `tar xvf mactool-linux-<arch>-1.x.x.tgz`.
 
 4. **Place the Executable in Your PATH**:
 
@@ -83,7 +81,11 @@ This command will extract and display the MAC addresses found in the input strin
 11-22-33-44-55-66
 ```
 
-For more details on the `extract` command, please refer to [Extract Command Documentation](https://github.com/bitcanon/mactool/wiki/Extract-Command).
+Use the `extract` command in interactive mode to extract MAC addresses from a text pasted into the terminal:
+
+![mactool-extract-demo1](docs/img/mactool-extract-demo1.gif)
+
+For more details on the `extract` command, please refer to [Extract Command](https://github.com/bitcanon/mactool/wiki/Extract-Command) documentation.
 
 ### Format MAC Addresses
 
@@ -98,7 +100,23 @@ This will format the MAC address with hyphens instead of colons and in lowercase
 00-1a-2b-3c-4d-5e
 ```
 
-For more details on the `format` command, please refer to [Format Command Documentation](https://github.com/bitcanon/mactool/wiki/Format-Command).
+Use the `format` command in interactive mode to format MAC addresses from a text pasted into the terminal:
+
+![mactool-format-demo1](docs/img/mactool-format-demo1.gif)
+
+For more details on the `format` command, please refer to [Format Command](https://github.com/bitcanon/mactool/wiki/Format-Command) documentation.
+
+### Information
+
+To get information about the configuration and database, use the `info` command. For example:
+
+```bash
+mactool info
+```
+
+This will provide you with information about the configuration variables and database information.
+
+For more details on the `info` command, please refer to [Info Command](https://github.com/bitcanon/mactool/wiki/Info-Command) documentation.
 
 ### Lookup Vendors
 
@@ -114,7 +132,11 @@ This will provide you with information about the vendor associated with the give
 00-11-22-33-44-55 (CIMSYS Inc)
 ```
 
-For more details on the `lookup` command, please refer to [Lookup Command Documentation](https://github.com/bitcanon/mactool/wiki/Lookup-Command).
+Use the `lookup` command in interactive mode to lookup MAC addresses vendors from a text pasted into the terminal:
+
+![mactool-lookup-demo1](docs/img/mactool-lookup-demo1.gif)
+
+For more details on the `lookup` command, please refer to [Lookup Command](https://github.com/bitcanon/mactool/wiki/Lookup-Command) documentation.
 
 ## Configuration
 
