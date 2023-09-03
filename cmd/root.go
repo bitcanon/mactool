@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -62,31 +63,43 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	// Set default config file path for the flag help text
+	var defaultConfigPath string
+	if runtime.GOOS == "windows" {
+		defaultConfigPath = "%USERPROFILE%\\.mactool.yaml"
+	} else {
+		defaultConfigPath = "~/.mactool.yaml"
+	}
+
 	// Add flag for custom config file path
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mactool.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is "+defaultConfigPath+")")
+
+	// Add flag for debug mode
+	rootCmd.PersistentFlags().Bool("debug", false, "show debug info")
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 
 	// Set a custom version template
 	rootCmd.SetVersionTemplate(`{{ printf "%s %s" .Name .Version }}`)
 }
 
-// initConfig reads in config file and ENV variables if set.
+// initConfig reads in config file and ENV variables if set
 func initConfig() {
 	if cfgFile != "" {
-		// Use config file from the flag.
+		// Use config file from the flag
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
+		// Find home directory
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".mactool" (without extension).
+		// Search config in home directory with name ".mactool" (without extension)
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".mactool")
 	}
 
 	// Check for environment variables prefixed with MACTOOL
-	replacer := strings.NewReplacer("-", "_")
+	replacer := strings.NewReplacer("-", "_", ".", "_")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.SetEnvPrefix("MACTOOL")
 
@@ -96,6 +109,6 @@ func initConfig() {
 	// Print all environment variables loaded in viper
 	// viper.Debug()
 
-	// If a config file is found, read it in.
+	// If a config file is found, read it in
 	viper.ReadInConfig()
 }

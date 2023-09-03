@@ -61,6 +61,11 @@ func (db *OuiDb) FindOuiByAssignment(assignment string) *Oui {
 	return nil
 }
 
+// GetNumberOfEntries returns the number of entries in the OUI database
+func (db *OuiDb) GetNumberOfEntries() int {
+	return len(db.Entries)
+}
+
 // LoadDatabase loads an OUI database in CSV format from the specified reader
 func LoadDatabase(r io.Reader) (*OuiDb, error) {
 	// Create a CSV reader

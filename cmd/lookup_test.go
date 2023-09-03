@@ -138,7 +138,7 @@ MA-L,123ABC,Swede Instruments,Storgatan 1 Stockholm SE 12345`
 			reader := strings.NewReader(csvData)
 
 			// Set up viper with the suppress-unmatched flag
-			viper.Set("suppress-unmatched", test.suppress)
+			viper.Set("lookup.suppress-unmatched", test.suppress)
 
 			// Set the sort flags
 			viper.Set("lookup.sort-asc", test.sortAsc)

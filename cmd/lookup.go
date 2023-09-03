@@ -88,7 +88,7 @@ func lookupAction(out io.Writer, ouiCsvFile io.Reader, s string) error {
 		} else {
 			// If the vendor was not found, print the MAC address
 			// if the --suppress-unmatched flag is not set
-			if !viper.GetBool("suppress-unmatched") {
+			if !viper.GetBool("lookup.suppress-unmatched") {
 				fmt.Fprintln(out, macAddress)
 			}
 		}
@@ -131,9 +131,9 @@ var lookupCmd = &cobra.Command{
 		var err error
 
 		// Check if data is being piped, read from file or redirected to stdin
-		if viper.GetString("lookup.input") != "" {
+		if viper.GetString("lookup.input-file") != "" {
 			// Read input from file
-			input, err = cli.ProcessFile(viper.GetString("lookup.input"))
+			input, err = cli.ProcessFile(viper.GetString("lookup.input-file"))
 			if err != nil {
 				return err
 			}
@@ -159,7 +159,7 @@ var lookupCmd = &cobra.Command{
 		}
 
 		// Get the OUI database file
-		csv := viper.GetString("oui-file")
+		csv := viper.GetString("lookup.oui-file")
 
 		// Check if the CSV file exists and download it if it doesn't
 		_, err = os.Stat(csv)
@@ -208,7 +208,7 @@ var lookupCmd = &cobra.Command{
 		defer file.Close()
 
 		// Determine the output file using Viper
-		outputFile := viper.GetString("lookup.output")
+		outputFile := viper.GetString("lookup.output-file")
 		append := viper.GetBool("lookup.append")
 
 		// Get the output stream
@@ -217,6 +217,11 @@ var lookupCmd = &cobra.Command{
 			return err
 		}
 		defer outStream.Close()
+
+		// Print the configuration debug if the --debug flag is set
+		if viper.GetBool("debug") {
+			utils.PrintConfigDebug()
+		}
 
 		// Extract MAC addresses from string and
 		// perform vendor lookup on each address
@@ -239,11 +244,10 @@ func init() {
 	*/
 
 	// Set a default CSV file path
-	viper.SetDefault("oui-file", oui.GetDefaultDatabasePath())
+	viper.SetDefault("lookup.oui-file", oui.GetDefaultDatabasePath())
 
-	// Set to environment variable MACTOOL_CSV_FILE if set
-	err := viper.BindEnv("oui-file")
-	cobra.CheckErr(err)
+	// Set a default URL for the OUI CSV file
+	viper.SetDefault("lookup.oui-url", "http://standards-oui.ieee.org/oui/oui.csv")
 
 	// Set default path for the flag help text
 	var defaultPath string
@@ -255,11 +259,11 @@ func init() {
 
 	// Set to the value of the --oui-file flag if set
 	lookupCmd.PersistentFlags().StringP("oui-file", "O", "", "path to OUI CSV file (default "+defaultPath+")")
-	viper.BindPFlag("oui-file", lookupCmd.PersistentFlags().Lookup("oui-file"))
+	viper.BindPFlag("lookup.oui-file", lookupCmd.PersistentFlags().Lookup("oui-file"))
 
 	// Set to the value of the --suppress-unmatched flag if set
 	lookupCmd.PersistentFlags().BoolP("suppress-unmatched", "u", false, "suppress unmatched MAC addresses from output")
-	viper.BindPFlag("suppress-unmatched", lookupCmd.PersistentFlags().Lookup("suppress-unmatched"))
+	viper.BindPFlag("lookup.suppress-unmatched", lookupCmd.PersistentFlags().Lookup("suppress-unmatched"))
 
 	// Set to the value of the --sort-asc flag if set
 	lookupCmd.Flags().BoolP("sort-asc", "s", false, "sort output in ascending order")
@@ -269,16 +273,16 @@ func init() {
 	lookupCmd.Flags().BoolP("sort-desc", "S", false, "sort output in descending order")
 	viper.BindPFlag("lookup.sort-desc", lookupCmd.Flags().Lookup("sort-desc"))
 
-	// Add flag for input file path
-	lookupCmd.Flags().StringP("input", "i", "", "read input from file")
-	viper.BindPFlag("lookup.input", lookupCmd.Flags().Lookup("input"))
+	// Add flag for --input-file path
+	lookupCmd.Flags().StringP("input-file", "i", "", "read input from file")
+	viper.BindPFlag("lookup.input-file", lookupCmd.Flags().Lookup("input-file"))
 
-	// Add flag for output file path
-	lookupCmd.Flags().StringP("output", "o", "", "write output to file")
-	viper.BindPFlag("lookup.output", lookupCmd.Flags().Lookup("output"))
+	// Add flag for --output-file path
+	lookupCmd.Flags().StringP("output-file", "o", "", "write output to file")
+	viper.BindPFlag("lookup.output-file", lookupCmd.Flags().Lookup("output-file"))
 
 	// Set to the value of the --append flag if set
-	lookupCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
+	lookupCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output-file")
 	viper.BindPFlag("lookup.append", lookupCmd.Flags().Lookup("append"))
 
 	// Set to the value of the --csv flag if set
