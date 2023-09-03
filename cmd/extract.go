@@ -91,9 +91,9 @@ var extractCmd = &cobra.Command{
 		var err error
 
 		// Check if data is being piped, read from file or redirected to stdin
-		if viper.GetString("extract.input") != "" {
+		if viper.GetString("extract.input-file") != "" {
 			// Read input from file
-			input, err = cli.ProcessFile(viper.GetString("extract.input"))
+			input, err = cli.ProcessFile(viper.GetString("extract.input-file"))
 			if err != nil {
 				return err
 			}
@@ -119,7 +119,7 @@ var extractCmd = &cobra.Command{
 		}
 
 		// Determine the output file using Viper
-		outputFile := viper.GetString("extract.output")
+		outputFile := viper.GetString("extract.output-file")
 		append := viper.GetBool("extract.append")
 
 		// Get the output stream
@@ -128,6 +128,11 @@ var extractCmd = &cobra.Command{
 			return err
 		}
 		defer outStream.Close()
+
+		// Print the configuration debug if the --debug flag is set
+		if viper.GetBool("debug") {
+			utils.PrintConfigDebug()
+		}
 
 		// Extract MAC addresses from string and
 		// print them to standard output
@@ -148,14 +153,14 @@ func init() {
 	viper.BindPFlag("extract.sort-desc", extractCmd.Flags().Lookup("sort-desc"))
 
 	// Add flag for input file path
-	extractCmd.Flags().StringP("input", "i", "", "read input from file")
-	viper.BindPFlag("extract.input", extractCmd.Flags().Lookup("input"))
+	extractCmd.Flags().StringP("input-file", "i", "", "read input from file")
+	viper.BindPFlag("extract.input-file", extractCmd.Flags().Lookup("input-file"))
 
 	// Add flag for output file path
-	extractCmd.Flags().StringP("output", "o", "", "write output to file")
-	viper.BindPFlag("extract.output", extractCmd.Flags().Lookup("output"))
+	extractCmd.Flags().StringP("output-file", "o", "", "write output to file")
+	viper.BindPFlag("extract.output-file", extractCmd.Flags().Lookup("output-file"))
 
 	// Set to the value of the --append flag if set
-	extractCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
+	extractCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output-file")
 	viper.BindPFlag("extract.append", extractCmd.Flags().Lookup("append"))
 }

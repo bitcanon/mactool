@@ -137,9 +137,9 @@ var formatCmd = &cobra.Command{
 		var err error
 
 		// Check if data is being piped, read from file or redirected to stdin
-		if viper.GetString("format.input") != "" {
+		if viper.GetString("format.input-file") != "" {
 			// Read input from file
-			input, err = cli.ProcessFile(viper.GetString("format.input"))
+			input, err = cli.ProcessFile(viper.GetString("format.input-file"))
 			if err != nil {
 				return err
 			}
@@ -166,14 +166,14 @@ var formatCmd = &cobra.Command{
 
 		// Create a MacFormat struct from the flags
 		format := createMacFormatFromFlags(
-			viper.GetBool("upper"),
-			viper.GetBool("lower"),
-			viper.GetString("delimiter"),
-			viper.GetInt("group-size"),
+			viper.GetBool("format.upper"),
+			viper.GetBool("format.lower"),
+			viper.GetString("format.delimiter"),
+			viper.GetInt("format.group-size"),
 		)
 
 		// Determine the output file using Viper
-		outputFile := viper.GetString("format.output")
+		outputFile := viper.GetString("format.output-file")
 		append := viper.GetBool("format.append")
 
 		// Get the output stream
@@ -182,6 +182,11 @@ var formatCmd = &cobra.Command{
 			return err
 		}
 		defer outStream.Close()
+
+		// Print the configuration debug if the --debug flag is set
+		if viper.GetBool("debug") {
+			utils.PrintConfigDebug()
+		}
 
 		// Format the MAC addresses found in the input string
 		// using the format specified by the flags
@@ -195,30 +200,30 @@ func init() {
 
 	// Add the --upper flag to the format command
 	formatCmd.Flags().BoolP("upper", "u", false, "convert MAC addresses to upper case")
-	viper.BindPFlag("upper", formatCmd.Flags().Lookup("upper"))
+	viper.BindPFlag("format.upper", formatCmd.Flags().Lookup("upper"))
 
 	// Add the --lower flag to the format command
 	formatCmd.Flags().BoolP("lower", "l", false, "convert MAC addresses to lower case")
-	viper.BindPFlag("lower", formatCmd.Flags().Lookup("lower"))
+	viper.BindPFlag("format.lower", formatCmd.Flags().Lookup("lower"))
 
 	// Add the --delimiter flag to the format command
 	formatCmd.Flags().StringP("delimiter", "d", ":", "delimiter character to use between hex groups")
-	viper.BindPFlag("delimiter", formatCmd.Flags().Lookup("delimiter"))
+	viper.BindPFlag("format.delimiter", formatCmd.Flags().Lookup("delimiter"))
 
 	// Add the --group-size flag to the format command
 	formatCmd.Flags().IntP("group-size", "g", 2, "number of characters in each hex group")
-	viper.BindPFlag("group-size", formatCmd.Flags().Lookup("group-size"))
+	viper.BindPFlag("format.group-size", formatCmd.Flags().Lookup("group-size"))
 
 	// Add flag for input file path
-	formatCmd.Flags().StringP("input", "i", "", "read input from file")
-	viper.BindPFlag("format.input", formatCmd.Flags().Lookup("input"))
+	formatCmd.Flags().StringP("input-file", "i", "", "read input from file")
+	viper.BindPFlag("format.input-file", formatCmd.Flags().Lookup("input-file"))
 
 	// Add flag for output file path
-	formatCmd.Flags().StringP("output", "o", "", "write output to file")
-	viper.BindPFlag("format.output", formatCmd.Flags().Lookup("output"))
+	formatCmd.Flags().StringP("output-file", "o", "", "write output to file")
+	viper.BindPFlag("format.output-file", formatCmd.Flags().Lookup("output-file"))
 
 	// Set to the value of the --append flag if set
-	formatCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output")
+	formatCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output-file")
 	viper.BindPFlag("format.append", formatCmd.Flags().Lookup("append"))
 
 	// Check for environment variables prefixed with MACTOOL
