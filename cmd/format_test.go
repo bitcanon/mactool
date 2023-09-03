@@ -20,6 +20,20 @@ func TestFormatAction(t *testing.T) {
 		format   mac.MacFormat
 	}{
 		{
+			name: "FormatUnmodified",
+			input: `Here is a MAC address: 00-1A-2B-3C-4D-5E
+				And another one: AA-BB-CC-DD-EE-FF
+				No MAC here: 123456`,
+			expected: `Here is a MAC address: 00-1A-2B-3C-4D-5E
+				And another one: AA-BB-CC-DD-EE-FF
+				No MAC here: 123456` + "\n",
+			format: mac.MacFormat{
+				Case:      mac.OriginalCase,
+				Delimiter: mac.OriginalDelim,
+				GroupSize: mac.OriginalGroupSize,
+			},
+		},
+		{
 			name: "FormatHyphenUpper",
 			input: `Here is a MAC address: 00:1A:2B:3C:4D:5E
 				And another one: AA-BB-CC-DD-EE-FF
@@ -30,7 +44,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.Upper,
 				Delimiter: mac.Hyphen,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -44,7 +58,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.Lower,
 				Delimiter: mac.Colon,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -58,7 +72,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.OriginalCase,
 				Delimiter: mac.Dot,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -72,7 +86,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.OriginalCase,
 				Delimiter: mac.None,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -86,7 +100,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.OriginalCase,
 				Delimiter: mac.Colon,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -100,7 +114,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.OriginalCase,
 				Delimiter: mac.Hyphen,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -114,7 +128,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.Lower,
 				Delimiter: mac.Dot,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -128,7 +142,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.Upper,
 				Delimiter: mac.None,
-				GroupSize: 2,
+				GroupSize: mac.OriginalGroupSize,
 			},
 		},
 		{
@@ -142,7 +156,7 @@ func TestFormatAction(t *testing.T) {
 			format: mac.MacFormat{
 				Case:      mac.Upper,
 				Delimiter: mac.Colon,
-				GroupSize: 4,
+				GroupSize: mac.GroupSizeFour,
 			},
 		},
 	}
@@ -200,7 +214,7 @@ func TestFormatActionOutput(t *testing.T) {
 			name:       "SingleLineInput",
 			input:      "Single line of input with one MAC address 00-00-5e-00-53-01 in it.",
 			expected:   "Single line of input with one MAC address 00:00:5e:00:53:01 in it." + "\n",
-			format:     mac.MacFormat{Case: mac.Lower, Delimiter: mac.Colon, GroupSize: 2},
+			format:     mac.MacFormat{Case: mac.Lower, Delimiter: mac.Colon, GroupSize: mac.OriginalGroupSize},
 			outputFile: outputFile.Name(),
 			append:     false,
 		},
@@ -211,7 +225,7 @@ Second line of input with one MAC address 00-00-5E-00-53-02 in it.`,
 			expected: `Single line of input with one MAC address 00:00:5e:00:53:01 in it.
 First line of input with one MAC address 00:00:5e:00:53:01 in it.
 Second line of input with one MAC address 00:00:5e:00:53:02 in it.` + "\n",
-			format:     mac.MacFormat{Case: mac.Lower, Delimiter: mac.Colon, GroupSize: 2},
+			format:     mac.MacFormat{Case: mac.Lower, Delimiter: mac.Colon, GroupSize: mac.OriginalGroupSize},
 			outputFile: outputFile.Name(),
 			append:     true,
 		},

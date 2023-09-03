@@ -57,11 +57,22 @@ func createMacFormatFromFlags(upper bool, lower bool, delimiter string, groupSiz
 		delimiterOption = mac.None
 	}
 
+	// Select group size based on flags
+	groupSizeOption := mac.OriginalGroupSize
+	switch groupSize {
+	case 2:
+		groupSizeOption = mac.GroupSizeTwo
+	case 4:
+		groupSizeOption = mac.GroupSizeFour
+	case 6:
+		groupSizeOption = mac.GroupSizeSix
+	}
+
 	// Create a MacFormat struct from the flags
 	return mac.MacFormat{
 		Case:      caseOption,
 		Delimiter: delimiterOption,
-		GroupSize: groupSize,
+		GroupSize: groupSizeOption,
 	}
 }
 
@@ -211,7 +222,7 @@ func init() {
 	viper.BindPFlag("format.delimiter", formatCmd.Flags().Lookup("delimiter"))
 
 	// Add the --group-size flag to the format command
-	formatCmd.Flags().IntP("group-size", "g", 2, "number of characters in each hex group")
+	formatCmd.Flags().IntP("group-size", "g", 0, "number of characters in each hex group")
 	viper.BindPFlag("format.group-size", formatCmd.Flags().Lookup("group-size"))
 
 	// Add flag for input file path
