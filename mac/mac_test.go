@@ -272,3 +272,43 @@ func TestFormatMacAddress(t *testing.T) {
 		})
 	}
 }
+
+// TestGetGroupSize tests the getGroupSize function.
+func TestGetGroupSize(t *testing.T) {
+	// Setup test cases
+	testCases := []struct {
+		name        string
+		macAddress  string
+		expected    int
+		expectedErr error
+	}{
+		{"WithColonGroupSizeIs2", "00:11:22:33:44:55", 2, nil},
+		{"WithHyphenGroupSizeIs2", "00-11-22-33-44-55", 2, nil},
+		{"WithPeriodGroupSizeIs2", "00.11.22.33.44.55", 2, nil},
+		{"WithColonGroupSizeIs4", "0011:2233:4455", 4, nil},
+		{"WithHyphenGroupSizeIs4", "0011-2233-4455", 4, nil},
+		{"WithPeriodGroupSizeIs4", "0011.2233.4455", 4, nil},
+		{"WithColonGroupSizeIs6", "001122:334455", 6, nil},
+		{"WithHyphenGroupSizeIs6", "001122-334455", 6, nil},
+		{"WithPeriodGroupSizeIs6", "001122.334455", 6, nil},
+		{"WithPeriodGroupSizeIs3", "001.122:334-455", 3, nil},
+		{"NoDelimiter", "001122334455", 0, ErrInvalidMacAddress},
+	}
+
+	// Loop through the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Get the group size of the MAC address
+			actual, err := getGroupSize(tc.macAddress)
+
+			// Compare the results to the expected values
+			if err != tc.expectedErr {
+				t.Errorf("expected %v, but got %v", tc.expectedErr, err)
+			}
+
+			if actual != tc.expected {
+				t.Errorf("expected %d, but got %d", tc.expected, actual)
+			}
+		})
+	}
+}

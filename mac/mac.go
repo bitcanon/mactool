@@ -55,11 +55,45 @@ const (
 	None
 )
 
+// GroupSizeOption is used to specify the number of characters in each group.
+type GroupSizeOption int
+
+const (
+	OriginalGroupSize GroupSizeOption = iota
+	Two
+	Four
+	Six
+)
+
 // MacFormat is used to specify the format of the MAC address.
 type MacFormat struct {
 	Case      CaseOption
 	Delimiter DelimiterOption
 	GroupSize int
+}
+
+// getGroupSize calculates the group size of the MAC address.
+// The group size is the number of characters in each group.
+// A delimiting character separates each group, and can be any
+// character except alphanumeric characters.
+func getGroupSize(macAddress string) (int, error) {
+	// Remove all non-alphanumeric characters from the MAC address
+	strippedMAC := regexp.MustCompile(`[^0-9a-zA-Z]`).ReplaceAllString(macAddress, "")
+	strippedLen := len(strippedMAC)
+
+	// Calculate the number of delimiters removed from the MAC address
+	difference := len(macAddress) - strippedLen
+
+	// If the difference is 0, the MAC address is invalid
+	if difference == 0 {
+		return 0, ErrInvalidMacAddress
+	}
+
+	// Calculate the group size
+	groupSize := strippedLen / (difference + 1)
+
+	// Return the group size and no error
+	return groupSize, nil
 }
 
 // cleanMacAddress removes all non-alphanumeric characters from the MAC address.
