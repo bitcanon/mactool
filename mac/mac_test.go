@@ -203,6 +203,7 @@ func TestFormatWithDelimiters(t *testing.T) {
 		{"GroupSizeIs2", "001122334455", ":", 2, "00:11:22:33:44:55", nil},
 		{"GroupSizeIs3", "001122334455", ":", 3, "", ErrInvalidGroupSize},
 		{"GroupSizeIs4", "001122334455", ".", 4, "0011.2233.4455", nil},
+		{"GroupSizeIs6", "001122334455", "-", 6, "001122-334455", nil},
 		{"InvalidMacLength", "00112233445", ".", 4, "", ErrInvalidMacAddressLength},
 	}
 
@@ -234,18 +235,20 @@ func TestFormatMacAddress(t *testing.T) {
 		expectedMac string
 		expectedErr error
 	}{
-		{"UpperColon", "001122AaBbCc", MacFormat{Upper, Colon, 2}, "00:11:22:AA:BB:CC", nil},
-		{"LowerHyphen", "001122AaBbCc", MacFormat{Lower, Hyphen, 2}, "00-11-22-aa-bb-cc", nil},
-		{"OriginalCaseDot", "001122AaBbCc", MacFormat{OriginalCase, Dot, 2}, "00.11.22.Aa.Bb.Cc", nil},
-		{"UpperGroupSize2", "001122AaBbCc", MacFormat{Upper, Colon, 2}, "00:11:22:AA:BB:CC", nil},
-		{"LowerGroupSize4", "001122AaBbCc", MacFormat{Lower, Dot, 4}, "0011.22aa.bbcc", nil},
-		{"InvalidCaseOption", "001122AaBbCc", MacFormat{5, Hyphen, 2}, "", ErrInvalidCaseOption},
-		{"OriginalCaseNoDelim", "001122AaBbCc", MacFormat{OriginalCase, None, 2}, "001122AaBbCc", nil},
-		{"OriginalCaseInvalidDelim", "001122AaBbCc", MacFormat{OriginalCase, 5, 2}, "", ErrInvalidDelimiterOption},
-		{"OriginalCaseOriginalDelim", "00:11:22:Aa:Bb:Cc", MacFormat{OriginalCase, OriginalDelim, 2}, "00:11:22:Aa:Bb:Cc", nil},
-		{"OriginalCaseHyphenDelim", "00:11:22:Aa:Bb:Cc", MacFormat{OriginalCase, Hyphen, 2}, "00-11-22-Aa-Bb-Cc", nil},
-		{"UpperHyphenDelim", "00:11:22:Aa:Bb:Cc", MacFormat{Upper, Hyphen, 2}, "00-11-22-AA-BB-CC", nil},
-		{"UpperInvalidDelim", "001122AaBbCc", MacFormat{Upper, 11, 2}, "", ErrInvalidDelimiterOption},
+		{"UpperColon", "001122AaBbCc", MacFormat{Upper, Colon, GroupSizeTwo}, "00:11:22:AA:BB:CC", nil},
+		{"LowerHyphen", "001122AaBbCc", MacFormat{Lower, Hyphen, GroupSizeTwo}, "00-11-22-aa-bb-cc", nil},
+		{"OriginalCaseDot", "001122AaBbCc", MacFormat{OriginalCase, Dot, GroupSizeTwo}, "00.11.22.Aa.Bb.Cc", nil},
+		{"UpperGroupSize2", "001122AaBbCc", MacFormat{Upper, Colon, GroupSizeTwo}, "00:11:22:AA:BB:CC", nil},
+		{"LowerGroupSize4", "001122AaBbCc", MacFormat{Lower, Dot, GroupSizeFour}, "0011.22aa.bbcc", nil},
+		{"LowerGroupSize6", "001122AaBbCc", MacFormat{Lower, Hyphen, GroupSizeSix}, "001122-aabbcc", nil},
+		{"UpperGroupSize6", "001122AaBbCc", MacFormat{Upper, Hyphen, GroupSizeSix}, "001122-AABBCC", nil},
+		{"InvalidCaseOption", "001122AaBbCc", MacFormat{5, Hyphen, GroupSizeTwo}, "", ErrInvalidCaseOption},
+		{"OriginalCaseNoDelim", "001122AaBbCc", MacFormat{OriginalCase, None, GroupSizeTwo}, "001122AaBbCc", nil},
+		{"OriginalCaseInvalidDelim", "001122AaBbCc", MacFormat{OriginalCase, 5, GroupSizeTwo}, "", ErrInvalidDelimiterOption},
+		{"OriginalCaseOriginalDelim", "00:11:22:Aa:Bb:Cc", MacFormat{OriginalCase, OriginalDelim, GroupSizeTwo}, "00:11:22:Aa:Bb:Cc", nil},
+		{"OriginalCaseHyphenDelim", "00:11:22:Aa:Bb:Cc", MacFormat{OriginalCase, Hyphen, GroupSizeTwo}, "00-11-22-Aa-Bb-Cc", nil},
+		{"UpperHyphenDelim", "00:11:22:Aa:Bb:Cc", MacFormat{Upper, Hyphen, GroupSizeTwo}, "00-11-22-AA-BB-CC", nil},
+		{"UpperInvalidDelim", "001122AaBbCc", MacFormat{Upper, 11, GroupSizeTwo}, "", ErrInvalidDelimiterOption},
 	}
 
 	// Loop through the test cases
@@ -291,7 +294,7 @@ func TestGetGroupSize(t *testing.T) {
 		{"WithColonGroupSizeIs6", "001122:334455", 6, nil},
 		{"WithHyphenGroupSizeIs6", "001122-334455", 6, nil},
 		{"WithPeriodGroupSizeIs6", "001122.334455", 6, nil},
-		{"WithPeriodGroupSizeIs3", "001.122:334-455", 3, nil},
+		{"WithPeriodGroupSizeIs3", "001.122:334-455", 0, ErrInvalidMacAddress},
 		{"NoDelimiter", "001122334455", 0, ErrInvalidMacAddress},
 	}
 
@@ -299,7 +302,7 @@ func TestGetGroupSize(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Get the group size of the MAC address
-			actual, err := getGroupSize(tc.macAddress)
+			actual, err := GetGroupSize(tc.macAddress)
 
 			// Compare the results to the expected values
 			if err != tc.expectedErr {

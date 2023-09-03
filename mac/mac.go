@@ -31,7 +31,7 @@ import (
 // Errors returned by functions in this package
 var ErrInvalidMacAddress = errors.New("invalid MAC address")
 var ErrInvalidMacAddressLength = errors.New("invalid MAC address length; must be divisible by group size")
-var ErrInvalidGroupSize = errors.New("invalid group size; must be 2 or 4")
+var ErrInvalidGroupSize = errors.New("invalid group size; must be 2, 4 or 6")
 var ErrInvalidCaseOption = errors.New("invalid case option")
 var ErrInvalidDelimiterOption = errors.New("invalid delimiter option")
 
@@ -60,40 +60,16 @@ type GroupSizeOption int
 
 const (
 	OriginalGroupSize GroupSizeOption = iota
-	Two
-	Four
-	Six
+	GroupSizeTwo
+	GroupSizeFour
+	GroupSizeSix
 )
 
 // MacFormat is used to specify the format of the MAC address.
 type MacFormat struct {
 	Case      CaseOption
 	Delimiter DelimiterOption
-	GroupSize int
-}
-
-// getGroupSize calculates the group size of the MAC address.
-// The group size is the number of characters in each group.
-// A delimiting character separates each group, and can be any
-// character except alphanumeric characters.
-func getGroupSize(macAddress string) (int, error) {
-	// Remove all non-alphanumeric characters from the MAC address
-	strippedMAC := regexp.MustCompile(`[^0-9a-zA-Z]`).ReplaceAllString(macAddress, "")
-	strippedLen := len(strippedMAC)
-
-	// Calculate the number of delimiters removed from the MAC address
-	difference := len(macAddress) - strippedLen
-
-	// If the difference is 0, the MAC address is invalid
-	if difference == 0 {
-		return 0, ErrInvalidMacAddress
-	}
-
-	// Calculate the group size
-	groupSize := strippedLen / (difference + 1)
-
-	// Return the group size and no error
-	return groupSize, nil
+	GroupSize GroupSizeOption
 }
 
 // cleanMacAddress removes all non-alphanumeric characters from the MAC address.
@@ -153,7 +129,7 @@ func findMacDelimiter(macAddress string) string {
 // The delimiter is the character used to separate each group.
 func formatWithDelimiters(macAddress, delimiter string, groupSize int) (string, error) {
 	// Validate groupSize
-	if groupSize != 2 && groupSize != 4 {
+	if groupSize != 2 && groupSize != 4 && groupSize != 6 {
 		return "", ErrInvalidGroupSize
 	}
 
@@ -282,12 +258,54 @@ func FormatMacAddress(macAddress string, newFormat MacFormat) (string, error) {
 		return "", ErrInvalidDelimiterOption
 	}
 
+	// Validate the group size option
+	groupSize := 0
+	switch newFormat.GroupSize {
+	case GroupSizeTwo:
+		groupSize = 2
+	case GroupSizeFour:
+		groupSize = 4
+	case GroupSizeSix:
+		groupSize = 6
+	case OriginalGroupSize:
+		groupSize, _ = GetGroupSize(macAddress)
+	}
+
 	// Format the MAC address
-	mac, err := formatWithDelimiters(macAddress, delimiterStr, newFormat.GroupSize)
+	mac, err := formatWithDelimiters(macAddress, delimiterStr, groupSize)
 	if err != nil {
 		return "", err
 	}
 
 	// Return the formatted MAC address
 	return mac, nil
+}
+
+// getGroupSize calculates the group size of the MAC address.
+// The group size is the number of characters in each group.
+// A delimiting character separates each group, and can be any
+// character except alphanumeric characters.
+func GetGroupSize(macAddress string) (int, error) {
+	// Remove all non-alphanumeric characters from the MAC address
+	strippedMAC := regexp.MustCompile(`[^0-9a-zA-Z]`).ReplaceAllString(macAddress, "")
+	strippedLen := len(strippedMAC)
+
+	// Calculate the number of delimiters removed from the MAC address
+	difference := len(macAddress) - strippedLen
+
+	// If the difference is 0, the MAC address is invalid
+	if difference == 0 {
+		return 0, ErrInvalidMacAddress
+	}
+
+	// Calculate the group size
+	groupSize := strippedLen / (difference + 1)
+
+	// If group size is not 2, 4 or 6, the MAC address is invalid
+	if groupSize != 2 && groupSize != 4 && groupSize != 6 {
+		return 0, ErrInvalidMacAddress
+	}
+
+	// Return the group size and no error
+	return groupSize, nil
 }
