@@ -34,14 +34,18 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Version: "1.1.1",
+	Version: "1.2.0",
 	Use:     "mactool",
 	Short:   "Simplify MAC Address Tasks on the Command Line",
 	Long: `Simplify MAC Address Tasks on the Command Line
 
 Extract, format, and transform MAC addresses, perform vendor lookups, 
 generate addresses, and enhance privacy through redaction and cleansing. 
-A versatile tool for network, security, and data tasks.`,
+A versatile tool for network, security, and data tasks.
+
+Author: Mikael Schultz <bitcanon@proton.me>
+GitHub: https://github.com/bitcanon/mactool
+`,
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
