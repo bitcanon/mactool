@@ -218,7 +218,7 @@ func init() {
 	viper.BindPFlag("format.lower", formatCmd.Flags().Lookup("lower"))
 
 	// Add the --delimiter flag to the format command
-	formatCmd.Flags().StringP("delimiter", "d", ":", "delimiter character to use between hex groups")
+	formatCmd.Flags().StringP("delimiter", "d", "=", "delimiter character to use between hex groups")
 	viper.BindPFlag("format.delimiter", formatCmd.Flags().Lookup("delimiter"))
 
 	// Add the --group-size flag to the format command
