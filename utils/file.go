@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io"
 	"os"
 	"time"
 )
@@ -24,4 +25,30 @@ func DaysSinceLastModified(filename string) (int, error) {
 	days := int(duration.Hours() / 24)
 
 	return days, nil
+}
+
+// copyFile copies a file from src to dest
+func CopyFile(src, dest string) error {
+	// Open the source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Create the destination file
+	destFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	// Copy the contents of the source file to the destination file
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// No errors occurred
+	return nil
 }
