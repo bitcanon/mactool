@@ -34,6 +34,20 @@ func TestFormatAction(t *testing.T) {
 			},
 		},
 		{
+			name: "FormatCleanMacUnmodified",
+			input: `Here is a MAC address: 001A2B3C4D5E
+				And another one: AABBCCDDEEFF
+				No MAC here: 123456`,
+			expected: `Here is a MAC address: 001A2B3C4D5E
+				And another one: AABBCCDDEEFF
+				No MAC here: 123456` + "\n",
+			format: mac.MacFormat{
+				Case:      mac.OriginalCase,
+				Delimiter: mac.OriginalDelim,
+				GroupSize: mac.OriginalGroupSize,
+			},
+		},
+		{
 			name: "FormatHyphenUpper",
 			input: `Here is a MAC address: 00:1A:2B:3C:4D:5E
 				And another one: AA-BB-CC-DD-EE-FF
