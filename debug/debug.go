@@ -1,10 +1,11 @@
-package utils
+package debug
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/bitcanon/mactool/oui"
+	"github.com/bitcanon/mactool/utils"
 	"github.com/spf13/viper"
 )
 
@@ -12,11 +13,11 @@ import (
 // and the variables set in the environment
 func PrintConfigDebug() {
 	// Get and print the default config file path
-	PrintConfigInfo()
+	utils.PrintConfigInfo()
 	fmt.Println()
 
 	// Print all configuration variables
-	PrintVariables(os.Stdout, All)
+	utils.PrintVariables(os.Stdout, utils.All)
 }
 
 // PrintDatabaseDebug prints debug information about the OUI database file
@@ -28,7 +29,7 @@ func PrintDatabaseDebug() {
 	dbURL := viper.GetString("lookup.oui-url")
 
 	// Get the number of days since the database file was last modified
-	days, err := DaysSinceLastModified(dbPath)
+	days, err := utils.DaysSinceLastModified(dbPath)
 	if err != nil {
 		fmt.Printf("Failed to get last modified time for %s: %v\n", dbPath, err)
 		return

@@ -27,6 +27,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bitcanon/mactool/debug"
 	"github.com/bitcanon/mactool/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -36,7 +37,7 @@ import (
 func infoAction(out io.Writer, s string) error {
 	utils.PrintConfigInfo()
 	fmt.Println()
-	utils.PrintDatabaseDebug()
+	debug.PrintDatabaseDebug()
 	return nil
 }
 

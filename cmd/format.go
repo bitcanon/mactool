@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/bitcanon/mactool/cli"
+	"github.com/bitcanon/mactool/debug"
 	"github.com/bitcanon/mactool/mac"
 	"github.com/bitcanon/mactool/utils"
 	"github.com/spf13/cobra"
@@ -196,7 +197,7 @@ var formatCmd = &cobra.Command{
 
 		// Print the configuration debug if the --debug flag is set
 		if viper.GetBool("debug") {
-			utils.PrintConfigDebug()
+			debug.PrintConfigDebug()
 		}
 
 		// Format the MAC addresses found in the input string
