@@ -22,6 +22,7 @@ THE SOFTWARE.
 package oui
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -29,7 +30,19 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+
+	"github.com/bitcanon/mactool/utils"
+	"github.com/spf13/viper"
 )
+
+// FilterOptions represents a set of search options. If all are false,
+// no filter is applied, and searches all fields.
+type FilterOptions struct {
+	Assignment   bool
+	Organization bool
+	Address      bool
+}
 
 // Oui represents an OUI entry in the database
 type Oui struct {
@@ -61,9 +74,61 @@ func (db *OuiDb) FindOuiByAssignment(assignment string) *Oui {
 	return nil
 }
 
-// GetNumberOfEntries returns the number of entries in the OUI database
-func (db *OuiDb) GetNumberOfEntries() int {
+// Len returns the number of OUI entries in the database
+func (db *OuiDb) Len() int {
 	return len(db.Entries)
+}
+
+// Swap swaps the OUI entries at the specified indexes
+func (db *OuiDb) Swap(i, j int) {
+	db.Entries[i], db.Entries[j] = db.Entries[j], db.Entries[i]
+}
+
+// Less returns true if the OUI entry at index i is less than the OUI entry at index j
+func (db *OuiDb) Less(i, j int) bool {
+	return db.Entries[i].Assignment < db.Entries[j].Assignment
+}
+
+// FindAllVendors finds all vendors matching the specified string
+// and returns a pointer to a new OUI database containing the results.
+// The search is case-insensitive and gets filtered by the specified
+// filter options. If no filter options are set, the search is performed
+// in all columns.
+func (db *OuiDb) FindAllVendors(s string, f FilterOptions) (*OuiDb, error) {
+	// Create a new OUI database for storing the results
+	var results *OuiDb = &OuiDb{}
+
+	// Search all columns if no filter options are set
+	findInAny := !f.Assignment && !f.Organization && !f.Address
+
+	// Loop through the OUI entries
+	for _, entry := range db.Entries {
+		// Search is case-insensitive so convert the search string to lowercase
+		s := strings.ToLower(s)
+
+		// If no filter options are set, search all columns
+		if findInAny {
+			if strings.Contains(strings.ToLower(entry.Assignment), s) ||
+				strings.Contains(strings.ToLower(entry.Organization), s) ||
+				strings.Contains(strings.ToLower(entry.Address), s) {
+				results.Entries = append(results.Entries, entry)
+			}
+			// Otherwise, search only the specified columns
+		} else {
+			if f.Assignment && strings.Contains(strings.ToLower(entry.Assignment), s) {
+				results.Entries = append(results.Entries, entry)
+			}
+			if f.Organization && strings.Contains(strings.ToLower(entry.Organization), s) {
+				results.Entries = append(results.Entries, entry)
+			}
+			if f.Address && strings.Contains(strings.ToLower(entry.Address), s) {
+				results.Entries = append(results.Entries, entry)
+			}
+		}
+	}
+
+	// Return the slice of vendors found
+	return results, nil
 }
 
 // LoadDatabase loads an OUI database in CSV format from the specified reader
@@ -188,4 +253,53 @@ func GetDefaultDatabasePath() string {
 
 	// Return the path to the OUI database file
 	return filepath.Join(dataDir, "oui.csv")
+}
+
+// UpdateDatabase checks if the OUI database file exists and downloads it
+// if it doesn't. The CSV file is downloaded from the URL specified in the
+// configuration file. If the URL is not specified, the default URL is used.
+func UpdateDatabase(csvFile string) error {
+	// Check if the CSV file exists
+	_, err := os.Stat(csvFile)
+
+	// If the file doesn't exist, download it
+	if os.IsNotExist(err) {
+		fmt.Printf("The file '%s' could not be found.\n", csvFile)
+		fmt.Print("Would you like to download it? (Y/n): ")
+
+		reader := bufio.NewReader(os.Stdin)
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimRight(input, "\r\n")
+
+		if input == "n" || input == "N" {
+			// User cancelled the download so exit the program
+			fmt.Println("File download cancelled.")
+			return nil
+		} else {
+			// User confirmed the download so proceed
+			url := viper.GetString("lookup.oui-url")
+
+			// Create a temporary file for writing the downloaded file
+			tempFile, err := os.CreateTemp("", "oui.csv")
+			if err != nil {
+				fmt.Println("Error creating temporary file:", err)
+				return err
+			}
+			defer os.Remove(tempFile.Name()) // Clean up the temporary file when done
+
+			// Download the OUI database
+			if err := DownloadDatabase(tempFile, url); err != nil {
+				return err
+			}
+
+			// Copy the temporary file to the CSV file
+			err = utils.CopyFile(tempFile.Name(), csvFile)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// No errors occurred during download
+	return nil
 }

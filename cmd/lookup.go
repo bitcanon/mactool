@@ -22,7 +22,6 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -34,6 +33,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/bitcanon/mactool/cli"
+	"github.com/bitcanon/mactool/debug"
 	"github.com/bitcanon/mactool/mac"
 	"github.com/bitcanon/mactool/oui"
 	"github.com/bitcanon/mactool/utils"
@@ -162,43 +162,7 @@ var lookupCmd = &cobra.Command{
 		csv := viper.GetString("lookup.oui-file")
 
 		// Check if the CSV file exists and download it if it doesn't
-		_, err = os.Stat(csv)
-		if os.IsNotExist(err) {
-			fmt.Printf("The file '%s' could not be found.\n", csv)
-			fmt.Print("Would you like to download it? (Y/n): ")
-
-			reader := bufio.NewReader(os.Stdin)
-			input, _ := reader.ReadString('\n')
-			input = strings.TrimRight(input, "\r\n")
-
-			if input == "n" || input == "N" {
-				// User cancelled the download so exit the program
-				fmt.Println("File download cancelled.")
-				return nil
-			} else {
-				// User confirmed the download so proceed
-				url := "http://standards-oui.ieee.org/oui/oui.csv"
-
-				// Create a temporary file for writing the downloaded file
-				tempFile, err := os.CreateTemp("", "oui.csv")
-				if err != nil {
-					fmt.Println("Error creating temporary file:", err)
-					return err
-				}
-				defer os.Remove(tempFile.Name()) // Clean up the temporary file when done
-
-				// Download the OUI database
-				if err := oui.DownloadDatabase(tempFile, url); err != nil {
-					return err
-				}
-
-				// Copy the temporary file to the CSV file
-				err = copyFile(tempFile.Name(), csv)
-				if err != nil {
-					return err
-				}
-			}
-		}
+		oui.UpdateDatabase(csv)
 
 		// Open the CSV file
 		file, err := os.Open(csv)
@@ -220,7 +184,7 @@ var lookupCmd = &cobra.Command{
 
 		// Print the configuration debug if the --debug flag is set
 		if viper.GetBool("debug") {
-			utils.PrintConfigDebug()
+			debug.PrintConfigDebug()
 		}
 
 		// Extract MAC addresses from string and
@@ -262,56 +226,30 @@ func init() {
 	viper.BindPFlag("lookup.oui-file", lookupCmd.PersistentFlags().Lookup("oui-file"))
 
 	// Set to the value of the --suppress-unmatched flag if set
-	lookupCmd.PersistentFlags().BoolP("suppress-unmatched", "u", false, "suppress unmatched MAC addresses from output")
-	viper.BindPFlag("lookup.suppress-unmatched", lookupCmd.PersistentFlags().Lookup("suppress-unmatched"))
+	lookupCmd.Flags().BoolP("suppress-unmatched", "u", false, "suppress unmatched MAC addresses from output")
+	viper.BindPFlag("lookup.suppress-unmatched", lookupCmd.Flags().Lookup("suppress-unmatched"))
 
 	// Set to the value of the --sort-asc flag if set
-	lookupCmd.Flags().BoolP("sort-asc", "s", false, "sort output in ascending order")
-	viper.BindPFlag("lookup.sort-asc", lookupCmd.Flags().Lookup("sort-asc"))
+	lookupCmd.PersistentFlags().BoolP("sort-asc", "s", false, "sort output in ascending order")
+	viper.BindPFlag("lookup.sort-asc", lookupCmd.PersistentFlags().Lookup("sort-asc"))
 
 	// Set to the value of the --sort-desc flag if set
-	lookupCmd.Flags().BoolP("sort-desc", "S", false, "sort output in descending order")
-	viper.BindPFlag("lookup.sort-desc", lookupCmd.Flags().Lookup("sort-desc"))
+	lookupCmd.PersistentFlags().BoolP("sort-desc", "S", false, "sort output in descending order")
+	viper.BindPFlag("lookup.sort-desc", lookupCmd.PersistentFlags().Lookup("sort-desc"))
 
 	// Add flag for --input-file path
 	lookupCmd.Flags().StringP("input-file", "i", "", "read input from file")
 	viper.BindPFlag("lookup.input-file", lookupCmd.Flags().Lookup("input-file"))
 
 	// Add flag for --output-file path
-	lookupCmd.Flags().StringP("output-file", "o", "", "write output to file")
-	viper.BindPFlag("lookup.output-file", lookupCmd.Flags().Lookup("output-file"))
+	lookupCmd.PersistentFlags().StringP("output-file", "o", "", "write output to file")
+	viper.BindPFlag("lookup.output-file", lookupCmd.PersistentFlags().Lookup("output-file"))
 
 	// Set to the value of the --append flag if set
-	lookupCmd.Flags().BoolP("append", "a", false, "append when writing to file with --output-file")
-	viper.BindPFlag("lookup.append", lookupCmd.Flags().Lookup("append"))
+	lookupCmd.PersistentFlags().BoolP("append", "a", false, "append when writing to file with --output-file")
+	viper.BindPFlag("lookup.append", lookupCmd.PersistentFlags().Lookup("append"))
 
 	// Set to the value of the --csv flag if set
-	lookupCmd.Flags().BoolP("csv", "c", false, "write output in CSV format")
-	viper.BindPFlag("lookup.csv", lookupCmd.Flags().Lookup("csv"))
-}
-
-// copyFile copies a file from src to dest
-func copyFile(src, dest string) error {
-	// Open the source file
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sourceFile.Close()
-
-	// Create the destination file
-	destFile, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer destFile.Close()
-
-	// Copy the contents of the source file to the destination file
-	_, err = io.Copy(destFile, sourceFile)
-	if err != nil {
-		return err
-	}
-
-	// No errors occurred
-	return nil
+	lookupCmd.PersistentFlags().BoolP("csv", "c", false, "write output in CSV format")
+	viper.BindPFlag("lookup.csv", lookupCmd.PersistentFlags().Lookup("csv"))
 }
