@@ -155,3 +155,109 @@ func TestDownloadDatabaseServerError(t *testing.T) {
 		t.Errorf("expected error from DownloadDatabase(), got nil")
 	}
 }
+
+// TestLen tests the Len function, which returns the number of entries in the database.
+func TestLen(t *testing.T) {
+	// Create a test CSV database
+	csvData := `MA-L,583653,"Apple, Inc.",1 Infinite Loop Cupertino CA US 95014
+MA-L,58A15F,Texas Instruments,12500 TI Blvd Dallas TX US 75243`
+
+	// Load the test CSV database
+	db, err := oui.LoadDatabase(strings.NewReader(csvData))
+	if err != nil {
+		t.Errorf("error returned from LoadDatabase(): %v", err)
+	}
+
+	// Verify that the database was loaded correctly
+	if db.Len() != 2 {
+		t.Errorf("expected 2 entries, got %d", db.Len())
+	}
+}
+
+// TestLess tests the Less function use for sorting.
+func TestLess(t *testing.T) {
+	// Create a test CSV database
+	csvData := `MA-L,111111,"Apple, Inc.",1 Infinite Loop Cupertino CA US 95014
+MA-L,222222,Texas Instruments,12500 TI Blvd Dallas TX US 75243`
+
+	// Load the test CSV database
+	db, err := oui.LoadDatabase(strings.NewReader(csvData))
+	if err != nil {
+		t.Errorf("error returned from LoadDatabase(): %v", err)
+	}
+
+	// Verify that the database was loaded correctly
+	if db.Less(0, 1) != true {
+		t.Errorf("expected true, got %v", db.Less(0, 1))
+	}
+}
+
+// TestSwap tests the case where the database is loaded successfully.
+// The entries at the specified indices should be swapped.
+func TestSwap(t *testing.T) {
+	// Create a test CSV database
+	csvData := `MA-L,111111,"Apple, Inc.",1 Infinite Loop Cupertino CA US 95014
+MA-L,222222,Texas Instruments,12500 TI Blvd Dallas TX US 75243`
+
+	// Load the test CSV database
+	db, err := oui.LoadDatabase(strings.NewReader(csvData))
+	if err != nil {
+		t.Errorf("error returned from LoadDatabase(): %v", err)
+	}
+
+	// Verify that the database was loaded correctly
+	db.Swap(0, 1)
+
+	// Verify that the database was loaded correctly
+	if db.Entries[0].Assignment != "222222" {
+		t.Errorf("expected 222222, got %s", db.Entries[0].Assignment)
+	}
+}
+
+// TestFindAllVendors tests the FindAllVendors function with various inputs.
+func TestFindAllVendors(t *testing.T) {
+	// Create a test CSV database
+	csvData := `MA-L,111111,"Banana, Inc.",1 Infinite Noob Cupertino CA US 22222
+MA-L,111222,Texas Instruments,11111 TI Blvd Dallas TX US 75243
+MA-L,222222,Texas Instruments,12500 TI Blvd Dallas TX US 75243`
+
+	// Load the test CSV database
+	db, err := oui.LoadDatabase(strings.NewReader(csvData))
+	if err != nil {
+		t.Errorf("error returned from LoadDatabase(): %v", err)
+	}
+
+	// Setup test cases
+	testCases := []struct {
+		input         string
+		filterOptions oui.FilterOptions
+		expected      int
+	}{
+		{input: "111", filterOptions: oui.FilterOptions{Assignment: false, Organization: false, Address: false}, expected: 2},
+		{input: "222", filterOptions: oui.FilterOptions{Assignment: false, Organization: false, Address: false}, expected: 3},
+		{input: "333", filterOptions: oui.FilterOptions{Assignment: false, Organization: false, Address: false}, expected: 0},
+		{input: "111", filterOptions: oui.FilterOptions{Assignment: true, Organization: false, Address: false}, expected: 2},
+		{input: "1111", filterOptions: oui.FilterOptions{Assignment: true, Organization: false, Address: false}, expected: 1},
+		{input: "333", filterOptions: oui.FilterOptions{Assignment: true, Organization: false, Address: false}, expected: 0},
+		{input: "Banana", filterOptions: oui.FilterOptions{Assignment: false, Organization: true, Address: false}, expected: 1},
+		{input: "banana", filterOptions: oui.FilterOptions{Assignment: false, Organization: true, Address: false}, expected: 1},
+		{input: "in", filterOptions: oui.FilterOptions{Assignment: false, Organization: true, Address: false}, expected: 3},
+		{input: "1111", filterOptions: oui.FilterOptions{Assignment: false, Organization: false, Address: true}, expected: 1},
+		{input: "US", filterOptions: oui.FilterOptions{Assignment: false, Organization: false, Address: true}, expected: 3},
+		{input: "222", filterOptions: oui.FilterOptions{Assignment: false, Organization: false, Address: true}, expected: 1},
+	}
+
+	// Loop through the test cases
+	for _, testCase := range testCases {
+		// Find all vendors matching the input string
+		vendors, err := db.FindAllVendors(testCase.input, testCase.filterOptions)
+		if err != nil {
+			t.Errorf("error returned from FindAllVendors(): %v", err)
+		}
+
+		// Verify that the database was loaded correctly
+		if len(vendors.Entries) != testCase.expected {
+			t.Errorf("expected %d entries, got %d", testCase.expected, len(vendors.Entries))
+		}
+	}
+}
