@@ -47,7 +47,7 @@ func PrintDatabaseDebug() {
 	db, err := oui.LoadDatabase(file)
 
 	// Get the number of entries in the database
-	entries := db.GetNumberOfEntries()
+	entries := db.Len()
 
 	// Print the database file path and the number of days since it was last modified
 	fmt.Println("OUI Database:")
