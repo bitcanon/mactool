@@ -51,6 +51,18 @@ type Oui struct {
 	Address      string // The organization street address
 }
 
+// Contains returns true if the OUI entry contains the specified string
+// in any of the OUI fields. The search is case-insensitive.
+func (o *Oui) Contains(s string) bool {
+	// Search is case-insensitive so convert the search string to lowercase
+	s = strings.ToLower(s)
+
+	// Check if the search string is contained in any of the OUI fields
+	return strings.Contains(strings.ToLower(o.Assignment), s) ||
+		strings.Contains(strings.ToLower(o.Organization), s) ||
+		strings.Contains(strings.ToLower(o.Address), s)
+}
+
 // The OUI database
 type OuiDb struct {
 	// The OUI database
