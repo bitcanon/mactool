@@ -73,6 +73,30 @@ func lookupAction(out io.Writer, ouiCsvFile io.Reader, s string) error {
 		// Lookup the vendor in the OUI database
 		vendor := db.FindOuiByAssignment(assignment)
 
+		// Check if the --include flag is set
+		include := viper.GetString("lookup.include")
+		if include != "" && vendor != nil {
+			// If the --include flag is set, check if the vendor name
+			// contains the specified string (case insensitive)
+			if !vendor.Contains(include) {
+				// If the vendor name does not contain the specified string,
+				// skip to the next MAC address
+				continue
+			}
+		}
+
+		// Check if the --exclude flag is set
+		exclude := viper.GetString("lookup.exclude")
+		if exclude != "" && vendor != nil {
+			// If the --exclude flag is set, check if the vendor name
+			// contains the specified string (case insensitive)
+			if vendor.Contains(exclude) {
+				// If the vendor name contains the specified string,
+				// skip to the next MAC address
+				continue
+			}
+		}
+
 		if vendor != nil {
 			// Write in CSV format if the --csv flag is set
 			if viper.GetBool("lookup.csv") {
@@ -252,4 +276,12 @@ func init() {
 	// Set to the value of the --csv flag if set
 	lookupCmd.PersistentFlags().BoolP("csv", "c", false, "write output in CSV format")
 	viper.BindPFlag("lookup.csv", lookupCmd.PersistentFlags().Lookup("csv"))
+
+	// Set to the value of the --include flag if set
+	lookupCmd.Flags().StringP("include", "I", "", "output only results that include this string (case insensitive)")
+	viper.BindPFlag("lookup.include", lookupCmd.Flags().Lookup("include"))
+
+	// Set to the value of the --exclude flag if set
+	lookupCmd.Flags().StringP("exclude", "E", "", "filter out results that contain this string (case insensitive)")
+	viper.BindPFlag("lookup.exclude", lookupCmd.Flags().Lookup("exclude"))
 }

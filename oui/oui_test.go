@@ -261,3 +261,66 @@ MA-L,222222,Texas Instruments,12500 TI Blvd Dallas TX US 75243`
 		}
 	}
 }
+
+// TestOuiContains tests the Contains function of the Oui type.
+func TestOuiContains(t *testing.T) {
+	// Create a test CSV database
+	entry := oui.Oui{
+		Assignment:   "1A2B3C",
+		Organization: "Banana, Inc.",
+		Address:      "1 Infinite Fruity Loop CA US 12014",
+	}
+
+	// Setup test cases
+	testCases := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:  "FullAssignment",
+			input: "1A2B3C", expected: true,
+		},
+		{
+			name:  "PartialAssignment",
+			input: "1A2B3", expected: true,
+		},
+		{
+			name:  "PartialAssignmentLowercase",
+			input: "1a2b3", expected: true,
+		},
+		{
+			name:  "FullOrganization",
+			input: "Banana, Inc.", expected: true,
+		},
+		{
+			name:  "PartialOrganizationLowercase",
+			input: "banana", expected: true,
+		},
+		{
+			name:  "FullAddress",
+			input: "1 Infinite Fruity Loop CA US 12014", expected: true,
+		},
+		{
+			name:  "PartialAddressUppercase",
+			input: "LOOP", expected: true,
+		},
+		{
+			name:  "PartialAddressLowercase",
+			input: "fruit", expected: true,
+		},
+		{
+			name:  "NotFound",
+			input: "111222", expected: false},
+	}
+
+	// Loop through the test cases
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Verify that the database was loaded correctly
+			if entry.Contains(testCase.input) != testCase.expected {
+				t.Errorf("expected %v, got %v", testCase.expected, entry.Contains(testCase.input))
+			}
+		})
+	}
+}
