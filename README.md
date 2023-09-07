@@ -4,6 +4,8 @@
 
 MAC Tool is a command-line utility designed to simplify common tasks related to MAC addresses in network, security, and data scenarios. Whether you need to extract MAC addresses from text, format them differently, or look up their vendors, MAC Tool has got you covered.
 
+![mactool-extract-demo1](docs/img/mactool-demo.gif)
+
 MAC Tool offers versatile functionality:
 
 - **Extraction**: You can input text directly, pipe it, or read from a file into MAC Tool, and it will efficiently extract MAC addresses from the provided content.
